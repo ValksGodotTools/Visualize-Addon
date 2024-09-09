@@ -13,7 +13,7 @@ config_version=5
 config/name="Visualize"
 run/main_scene="res://addons/visualize/Example Scene/scene.tscn"
 config/features=PackedStringArray("4.3", "C#", "Forward Plus")
-config/icon="res://icon.svg"
+config/icon="res://addons/visualize/Example Scene/icon.svg"
 
 [autoload]
 
