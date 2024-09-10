@@ -13,9 +13,7 @@ public partial class ExampleScene : Node
 
 		// As you can see the visualize info is created at the moment of node creation
 		_ = new GTween(this)
-			.Delay(2)
-			.Callback(() => AddChild(sprite))
-			.Delay(2)
-			.Callback(() => sprite.QueueFree());
+			.Delay(1)
+			.Callback(() => AddChild(sprite));
 	}
 }

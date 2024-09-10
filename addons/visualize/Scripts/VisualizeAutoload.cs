@@ -1,7 +1,6 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-using Visualize.Utils;
 
 namespace Visualize.Core;
 
@@ -9,58 +8,64 @@ public partial class VisualizeAutoload : Node
 {
     private readonly Dictionary<ulong, VisualNodeInfo> nodeTrackers = new();
 
-	public override void _Ready()
-	{
-        foreach (Node node in GetTree().Root.GetChildren<Node>())
+    public override void _Ready()
+    {
+        Window root = GetTree().Root;
+        Godot.Collections.Array<Node> children = root.GetChildren();
+
+        foreach (Node node in children)
         {
-            VisualNode visualNode = VisualizeAttributeHandler.RetrieveData(node);
-
-            if (visualNode != null)
-            {
-                (VBoxContainer vbox, List<Action> actions) = VisualUI.CreateVisualPanel(GetTree(), visualNode);
-
-                nodeTrackers.Add(node.GetInstanceId(), new VisualNodeInfo(actions, vbox, node));
-            }
+            AddVisualNode(node);
         }
 
-        GetTree().NodeAdded += node =>
+        GetTree().NodeAdded += AddVisualNode;
+        GetTree().NodeRemoved += RemoveVisualNode;
+    }
+
+    private void AddVisualNode(Node node)
+    {
+        VisualNode visualNode = VisualizeAttributeHandler.RetrieveData(node);
+
+        if (visualNode != null)
         {
-            VisualNode visualNode = VisualizeAttributeHandler.RetrieveData(node);
+            (VBoxContainer vbox, List<Action> actions) = VisualUI.CreateVisualPanel(GetTree(), visualNode);
+            ulong instanceId = node.GetInstanceId();
 
-            if (visualNode != null)
-            {
-                (VBoxContainer vbox, List<Action> actions) = VisualUI.CreateVisualPanel(GetTree(), visualNode);
+            nodeTrackers.Add(instanceId, new VisualNodeInfo(actions, vbox, node));
+        }
+    }
 
-                nodeTrackers.Add(node.GetInstanceId(), new VisualNodeInfo(actions, vbox, node));
-            }
-        };
+    private void RemoveVisualNode(Node node)
+    {
+        ulong instanceId = node.GetInstanceId();
 
-        GetTree().NodeRemoved += node =>
+        if (nodeTrackers.TryGetValue(instanceId, out VisualNodeInfo info))
         {
-            if (nodeTrackers.ContainsKey(node.GetInstanceId()))
-            {
-                nodeTrackers[node.GetInstanceId()].VisualControl.QueueFree();
-                nodeTrackers.Remove(node.GetInstanceId());
-            }
-        };
+            info.VisualControl.QueueFree();
+            nodeTrackers.Remove(instanceId);
+        }
     }
 
     public override void _PhysicsProcess(double delta)
     {
         foreach (KeyValuePair<ulong, VisualNodeInfo> kvp in nodeTrackers)
         {
-            Node node = kvp.Value.Node;
+            VisualNodeInfo info = kvp.Value;
+            Node node = info.Node;
+            VBoxContainer visualControl = info.VisualControl;
 
+            // Update position based on node type
             if (node is Node2D node2D)
             {
-                kvp.Value.VisualControl.GlobalPosition = node2D.GlobalPosition;
+                visualControl.GlobalPosition = node2D.GlobalPosition;
             }
             else if (node is Control control)
             {
-                kvp.Value.VisualControl.GlobalPosition = control.GlobalPosition;
+                visualControl.GlobalPosition = control.GlobalPosition;
             }
 
-            foreach (Action action in kvp.Value.Actions)
+            // Execute actions
+            foreach (Action action in info.Actions)
             {
                 action();
             }
