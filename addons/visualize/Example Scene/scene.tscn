@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://dpt16oa8hjtej"]
+[gd_scene load_steps=4 format=3 uid="uid://dpt16oa8hjtej"]
 
 [ext_resource type="Script" path="res://addons/visualize/Example Scene/ExampleScene.cs" id="1_p5fwf"]
+[ext_resource type="Texture2D" uid="uid://bta173dmvpgj3" path="res://addons/visualize/Example Scene/icon.svg" id="2_wanm8"]
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_pwxkx"]
 light_mode = 1
@@ -48,9 +49,13 @@ Use WASD to move the camera."
 autowrap_mode = 2
 
 [node name="CanvasModulate" type="CanvasModulate" parent="."]
-color = Color(0.324219, 0.324219, 0.324219, 1)
+color = Color(0.0742188, 0.0742188, 0.0742188, 1)
 
 [node name="Camera2D" type="Camera2D" parent="."]
+
+[node name="Background" type="Sprite2D" parent="."]
+scale = Vector2(30, 30)
+texture = ExtResource("2_wanm8")
 
 [node name="Label" type="Label" parent="."]
 material = SubResource("CanvasItemMaterial_pwxkx")

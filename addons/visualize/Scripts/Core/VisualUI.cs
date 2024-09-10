@@ -19,7 +19,11 @@ public static class VisualUI
 
         Node node = debugVisualNode.Node;
 
+        VBoxContainer vboxParent = new();
+
         VBoxContainer vboxMembers = CreateVisualContainer(node.Name);
+
+        VBoxContainer readonlyMembers = new();
 
         string[] visualizeMembers = debugVisualNode.VisualizeMembers;
 
@@ -59,7 +63,8 @@ public static class VisualUI
                     // Do nothing
                 });
 
-                visualControlInfo.Control.SetEditable(false);
+                // Godot makes it harder to see when their non-editable
+                //visualControlInfo.Control.SetEditable(false);
 
                 updateControls.Add(() =>
                 {
@@ -70,11 +75,10 @@ public static class VisualUI
                     visualControlInfo.Control.SetValue(newValue);
                 });
 
-                HBoxContainer hbox = new();
+                HBoxContainer hbox = new() { Modulate = new Color(1.0f, 0.75f, 0.8f, 1) };
                 hbox.AddChild(new Label { Text = visualMember });
                 hbox.AddChild(visualControlInfo.Control.Control);
-
-                vboxMembers.AddChild(hbox);
+                readonlyMembers.AddChild(hbox);
             }
         }
 
@@ -89,14 +93,19 @@ public static class VisualUI
 
         visualNodes.Add(node, vboxLogs);
 
+        vboxParent.AddChild(readonlyMembers);
+        vboxParent.AddChild(vboxMembers);
+
+        vboxMembers.Modulate = new Color(0.8f, 1, 0.8f, 1);
+
         // Add to canvas layer so UI is not affected by lighting in game world
         CanvasLayer canvasLayer = new();
         canvasLayer.FollowViewportEnabled = true;
-        canvasLayer.AddChild(vboxMembers);
+        canvasLayer.AddChild(vboxParent);
 
         tree.Root.CallDeferred(Node.MethodName.AddChild, canvasLayer);
 
-        vboxMembers.Scale = Vector2.One * VISUAL_UI_SCALE_FACTOR;
+        vboxParent.Scale = Vector2.One * VISUAL_UI_SCALE_FACTOR;
 
         if (debugVisualNode.InitialPosition != Vector2.Zero)
         {
@@ -106,7 +115,7 @@ public static class VisualUI
         // This is ugly but I don't know how else to do it
         VisualLogger.VisualNodes = visualNodes;
 
-        return (vboxMembers, updateControls);
+        return (vboxParent, updateControls);
     }
 
     private static VBoxContainer CreateVisualContainer(string nodeName)
