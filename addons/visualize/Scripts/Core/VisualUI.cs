@@ -13,7 +13,7 @@ public static class VisualUI
 
     public static void CreateVisualPanels(List<VisualNode> debugVisualNodes, List<VisualSpinBox> debugExportSpinBoxes)
     {
-        Dictionary<Node, VBoxContainer> visualNodes = [];
+        Dictionary<Node, VBoxContainer> visualNodes = new();
 
         foreach (VisualNode debugVisualNode in debugVisualNodes)
         {

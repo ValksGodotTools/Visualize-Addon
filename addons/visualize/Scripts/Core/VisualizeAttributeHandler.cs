@@ -13,12 +13,22 @@ public static class VisualizeAttributeHandler
 
     public static List<VisualNode> RetrieveData(Node parent)
     {
-        List<VisualNode> debugVisualNodes = [];
+        List<VisualNode> debugVisualNodes = new();
         Type[] types = Assembly.GetExecutingAssembly().GetTypes();
 
         foreach (Type type in types)
         {
-            Vector2 initialPosition = GetInitialPosition(type);
+            VisualizeAttribute attribute = (VisualizeAttribute)type.GetCustomAttribute(typeof(VisualizeAttribute), false);
+
+            Vector2 initialPosition = Vector2.Zero;
+            bool alwaysUpdate = false;
+            
+            if (attribute != null)
+            {
+                initialPosition = attribute.InitialPosition;
+                alwaysUpdate = attribute.AlwaysUpdate;
+            }
+
             List<Node> nodes = parent.GetNodes(type);
 
             foreach (Node node in nodes)
@@ -29,19 +39,12 @@ public static class VisualizeAttributeHandler
 
                 if (properties.Any() || fields.Any() || methods.Any())
                 {
-                    debugVisualNodes.Add(new VisualNode(node, initialPosition, properties, fields, methods));
+                    debugVisualNodes.Add(new VisualNode(node, initialPosition, alwaysUpdate, properties, fields, methods));
                 }
             }
         }
 
         return debugVisualNodes;
-    }
-
-    private static Vector2 GetInitialPosition(Type type)
-    {
-        VisualizeAttribute attribute = (VisualizeAttribute)type.GetCustomAttribute(typeof(VisualizeAttribute), false);
-        
-        return attribute?.InitialPosition ?? Vector2.Zero;
     }
 
     private static List<T> GetVisualMembers<T>(Func<BindingFlags, T[]> getMembers) where T : MemberInfo

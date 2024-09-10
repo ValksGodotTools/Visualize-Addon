@@ -5,13 +5,24 @@ using System.Reflection;
 
 namespace Visualize;
 
-public class VisualNode(Node node, Vector2 initialPosition, IEnumerable<PropertyInfo> properties, IEnumerable<FieldInfo> fields, IEnumerable<MethodInfo> methods)
+public class VisualNode
 {
-    public Node Node { get; } = node;
-    public Vector2 InitialPosition { get; } = initialPosition;
-    public IEnumerable<PropertyInfo> Properties { get; } = properties;
-    public IEnumerable<FieldInfo> Fields { get; } = fields;
-    public IEnumerable<MethodInfo> Methods { get; } = methods;
+    public Node Node { get; }
+    public bool AlwaysUpdate { get; }
+    public Vector2 InitialPosition { get; }
+    public IEnumerable<PropertyInfo> Properties { get; }
+    public IEnumerable<FieldInfo> Fields { get; }
+    public IEnumerable<MethodInfo> Methods { get; }
+
+    public VisualNode(Node node, Vector2 initialPosition, bool alwaysUpdate, IEnumerable<PropertyInfo> properties, IEnumerable<FieldInfo> fields, IEnumerable<MethodInfo> methods)
+    {
+        Node = node;
+        AlwaysUpdate = alwaysUpdate;
+        InitialPosition = initialPosition;
+        Properties = properties;
+        Fields = fields;
+        Methods = methods;
+    }
 }
 
 public class VisualSpinBox
