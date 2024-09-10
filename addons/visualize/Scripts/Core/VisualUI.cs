@@ -28,44 +28,48 @@ public static class VisualUI
             {
                 foreach (string visualMember in visualizeMembers)
                 {
+                    GD.Print(visualMember);
+
                     PropertyInfo property = node.GetType().GetProperty(visualMember);
 
                     object initialValue = property.GetValue(node);
                     
-                    (Control, List<Control>) element = VisualControlTypes.CreateControlForType(initialValue, property.PropertyType, debugExportSpinBoxes, v =>
+                    VisualControlInfo visualControlInfo = VisualControlTypes.CreateControlForType(initialValue, property.PropertyType, debugExportSpinBoxes, v =>
                     {
                         // Do nothing
                     });
 
-                    if (property.PropertyType == typeof(Vector2))
+                    visualControlInfo.Controls.ForEach(c =>
                     {
-
-                    }
-
-                    foreach (Control control in element.Item2)
-                    {
-                        Action action = () => { };
-
-                        if (control is SpinBox spinBox)
+                        if (c is SpinBox spinBox)
                         {
                             spinBox.Editable = false;
-
-                            action = () => spinBox.Value = (double)Convert.ChangeType(property.GetValue(node), typeof(double));
-
                         }
-                        else if (control is LineEdit lineEdit)
+                        else if (c is LineEdit lineEdit)
                         {
                             lineEdit.Editable = false;
                         }
-                        else if (control is BaseButton baseButton)
+                        else if (c is CheckBox checkBox)
                         {
-                            baseButton.Disabled = true;
+                            checkBox.Disabled = true;
                         }
+                        else if (c is OptionButton optionButton)
+                        {
+                            optionButton.Disabled = true;
+                        }
+                        else if (c is ColorPickerButton colorPickerButton)
+                        {
+                            colorPickerButton.Disabled = true;
+                        }
+                        // Add more control types here as needed
+                    });
 
-                        updateControls.Add(action);
-                    }
+                    updateControls.Add(() =>
+                    {
+                        visualControlInfo.Control.SetValue(property.GetValue(node));
+                    });
 
-                    vboxMembers.AddChild(element.Item1);
+                    vboxMembers.AddChild(visualControlInfo.Control.Control);
                 }
             }
 
@@ -165,12 +169,12 @@ public static class VisualUI
 
         object initialValue = VisualHandler.GetMemberValue(member, node);
 
-        (Control, List<Control>) element = VisualControlTypes.CreateControlForType(initialValue, type, debugExportSpinBoxes, v =>
+        VisualControlInfo element = VisualControlTypes.CreateControlForType(initialValue, type, debugExportSpinBoxes, v =>
         {
             VisualHandler.SetMemberValue(member, node, v);
         });
 
-        if (element.Item1 != null)
+        if (element.Control.Control != null)
         {
             Label label = new()
             {
@@ -179,7 +183,7 @@ public static class VisualUI
             };
 
             hbox.AddChild(label);
-            hbox.AddChild(element.Item1);
+            hbox.AddChild(element.Control.Control);
         }
 
         return hbox;
