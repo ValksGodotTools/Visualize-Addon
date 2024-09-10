@@ -96,6 +96,16 @@ public static class VisualUI
         vboxParent.AddChild(readonlyMembers);
         vboxParent.AddChild(vboxMembers);
 
+        foreach (BaseButton baseButton in vboxParent.GetChildren<BaseButton>())
+        {
+            baseButton.Pressed += () =>
+            {
+                _ = new GTween(baseButton)
+                    .Delay(0.1)
+                    .Callback(() => baseButton.ReleaseFocus());
+            };
+        }
+
         vboxMembers.Modulate = new Color(0.8f, 1, 0.8f, 1);
 
         // Add to canvas layer so UI is not affected by lighting in game world
