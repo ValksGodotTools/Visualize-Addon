@@ -11,7 +11,7 @@ public static class VisualUI
 {
     public const float VISUAL_UI_SCALE_FACTOR = 0.6f;
 
-    public static List<Action> CreateVisualPanel(VisualNode debugVisualNode)
+    public static (VBoxContainer, List<Action>) CreateVisualPanel(SceneTree tree, VisualNode debugVisualNode)
     {
         List<VisualSpinBox> debugExportSpinBoxes = new();
         Dictionary<Node, VBoxContainer> visualNodes = new();
@@ -63,17 +63,7 @@ public static class VisualUI
         visualNodes.Add(node, vboxLogs);
 
         // Add vbox to scene tree to get vbox.Size for later
-        node.AddChild(vboxMembers);
-
-        // Using RigidBodies as a temporary workaround to overlapping visual panels
-        // Of course updating the control positions would be better but I'm not sure
-        // how to do this right now
-        RigidBody2D rigidBody = CreateRigidBody(vboxMembers);
-
-        // Reparent vbox to rigidbody
-        vboxMembers.GetParent().RemoveChild(vboxMembers);
-        rigidBody.AddChild(vboxMembers);
-        node.AddChild(rigidBody);
+        tree.Root.AddChild(vboxMembers);
 
         // All debug UI elements should not be influenced by the game world environments lighting
         node.GetChildren<Control>().ForEach(child => child.SetUnshaded());
@@ -88,30 +78,7 @@ public static class VisualUI
         // This is ugly but I don't know how else to do it
         VisualLogger.VisualNodes = visualNodes;
 
-        return updateControls;
-    }
-
-    private static RigidBody2D CreateRigidBody(VBoxContainer vbox)
-    {
-        RigidBody2D rigidBody = new()
-        {
-            GravityScale = 0,
-            LockRotation = true
-        };
-        rigidBody.SetCollisionLayerAndMask(32);
-
-        CollisionShape2D collision = new()
-        {
-            Shape = new RectangleShape2D
-            {
-                Size = vbox.Size
-            },
-            Position = vbox.Size / 2
-        };
-
-        rigidBody.AddChild(collision);
-
-        return rigidBody;
+        return (vboxMembers, updateControls);
     }
 
     private static VBoxContainer CreateVisualContainer(string nodeName)
