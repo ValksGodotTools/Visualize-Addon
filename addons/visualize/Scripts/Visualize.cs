@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Visualize;
+namespace Visualize.Core;
 
 #if TOOLS
 [Tool]

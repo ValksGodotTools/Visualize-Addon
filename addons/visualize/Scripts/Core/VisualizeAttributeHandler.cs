@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using Visualize.Utils;
 
-namespace Visualize;
+namespace Visualize.Core;
 
 public static class VisualizeAttributeHandler
 {

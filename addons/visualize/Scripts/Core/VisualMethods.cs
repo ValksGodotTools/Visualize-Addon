@@ -5,7 +5,7 @@ using System.Reflection;
 using Visualize.Utils;
 using static Godot.Control;
 
-namespace Visualize;
+namespace Visualize.Core;
 
 public static class VisualMethods
 {
