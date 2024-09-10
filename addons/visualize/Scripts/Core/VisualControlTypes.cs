@@ -9,12 +9,6 @@ using static Godot.Control;
 
 namespace Visualize;
 
-public interface IVisualControl
-{
-    void SetValue(object value);
-    Control Control { get; }
-}
-
 public class VisualControlInfo
 {
     public IVisualControl Control { get; }
@@ -987,6 +981,13 @@ public static class VisualControlTypes
     #endregion
 }
 
+public interface IVisualControl
+{
+    void SetValue(object value);
+    Control Control { get; }
+    void SetEditable(bool editable);
+}
+
 public class Vector2Control : IVisualControl
 {
     private readonly HBoxContainer _vector2HBox;
@@ -1010,6 +1011,12 @@ public class Vector2Control : IVisualControl
     }
 
     public Control Control => _vector2HBox;
+
+    public void SetEditable(bool editable)
+    {
+        _spinBoxX.Editable = editable;
+        _spinBoxY.Editable = editable;
+    }
 }
 
 public class Vector2IControl : IVisualControl
@@ -1035,6 +1042,12 @@ public class Vector2IControl : IVisualControl
     }
 
     public Control Control => _vector2IHBox;
+
+    public void SetEditable(bool editable)
+    {
+        _spinBoxX.Editable = editable;
+        _spinBoxY.Editable = editable;
+    }
 }
 
 public class Vector3Control : IVisualControl
@@ -1063,6 +1076,13 @@ public class Vector3Control : IVisualControl
     }
 
     public Control Control => _vector3HBox;
+
+    public void SetEditable(bool editable)
+    {
+        _spinBoxX.Editable = editable;
+        _spinBoxY.Editable = editable;
+        _spinBoxZ.Editable = editable;
+    }
 }
 
 public class Vector3IControl : IVisualControl
@@ -1091,6 +1111,13 @@ public class Vector3IControl : IVisualControl
     }
 
     public Control Control => _vector3IHBox;
+
+    public void SetEditable(bool editable)
+    {
+        _spinBoxX.Editable = editable;
+        _spinBoxY.Editable = editable;
+        _spinBoxZ.Editable = editable;
+    }
 }
 
 public class Vector4Control : IVisualControl
@@ -1122,6 +1149,14 @@ public class Vector4Control : IVisualControl
     }
 
     public Control Control => _vector4HBox;
+
+    public void SetEditable(bool editable)
+    {
+        _spinBoxX.Editable = editable;
+        _spinBoxY.Editable = editable;
+        _spinBoxZ.Editable = editable;
+        _spinBoxW.Editable = editable;
+    }
 }
 
 public class Vector4IControl : IVisualControl
@@ -1153,6 +1188,14 @@ public class Vector4IControl : IVisualControl
     }
 
     public Control Control => _vector4IHBox;
+
+    public void SetEditable(bool editable)
+    {
+        _spinBoxX.Editable = editable;
+        _spinBoxY.Editable = editable;
+        _spinBoxZ.Editable = editable;
+        _spinBoxW.Editable = editable;
+    }
 }
 
 public class QuaternionControl : IVisualControl
@@ -1184,6 +1227,14 @@ public class QuaternionControl : IVisualControl
     }
 
     public Control Control => _quaternionHBox;
+
+    public void SetEditable(bool editable)
+    {
+        _spinBoxX.Editable = editable;
+        _spinBoxY.Editable = editable;
+        _spinBoxZ.Editable = editable;
+        _spinBoxW.Editable = editable;
+    }
 }
 
 public class LineEditControl : IVisualControl
@@ -1204,6 +1255,11 @@ public class LineEditControl : IVisualControl
     }
 
     public Control Control => _lineEdit;
+
+    public void SetEditable(bool editable)
+    {
+        _lineEdit.Editable = editable;
+    }
 }
 
 public class SpinBoxControl : IVisualControl
@@ -1217,25 +1273,26 @@ public class SpinBoxControl : IVisualControl
 
     public void SetValue(object value)
     {
-        if (value is double doubleValue)
+        if (value != null)
         {
-            _spinBox.Value = doubleValue;
-        }
-        else if (value is float floatValue)
-        {
-            _spinBox.Value = floatValue;
-        }
-        else if (value is int intValue)
-        {
-            _spinBox.Value = intValue;
-        }
-        else if (value is decimal decimalValue)
-        {
-            _spinBox.Value = Convert.ToDouble(decimalValue);
+            try
+            {
+                _spinBox.Value = Convert.ToDouble(value);
+            }
+            catch (InvalidCastException)
+            {
+                // Handle the case where the value cannot be converted to double
+                GD.PushWarning($"Cannot convert value of type {value.GetType()} to double.");
+            }
         }
     }
 
     public Control Control => _spinBox;
+
+    public void SetEditable(bool editable)
+    {
+        _spinBox.Editable = editable;
+    }
 }
 
 public class CheckBoxControl : IVisualControl
@@ -1256,6 +1313,11 @@ public class CheckBoxControl : IVisualControl
     }
 
     public Control Control => _checkBox;
+
+    public void SetEditable(bool editable)
+    {
+        _checkBox.Disabled = !editable;
+    }
 }
 
 public class ColorPickerButtonControl : IVisualControl
@@ -1276,6 +1338,11 @@ public class ColorPickerButtonControl : IVisualControl
     }
 
     public Control Control => _colorPickerButton.Control;
+
+    public void SetEditable(bool editable)
+    {
+        _colorPickerButton.Control.Disabled = !editable;
+    }
 }
 
 public class OptionButtonEnumControl : IVisualControl
@@ -1293,6 +1360,11 @@ public class OptionButtonEnumControl : IVisualControl
     }
 
     public Control Control => _optionButton.Control;
+
+    public void SetEditable(bool editable)
+    {
+        _optionButton.Control.Disabled = !editable;
+    }
 }
 
 public class VBoxContainerControl : IVisualControl
@@ -1310,4 +1382,9 @@ public class VBoxContainerControl : IVisualControl
     }
 
     public Control Control => _vboxContainer;
+
+    public void SetEditable(bool editable)
+    {
+        // No specific editable setting for VBoxContainer
+    }
 }

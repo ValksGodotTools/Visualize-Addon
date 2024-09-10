@@ -39,30 +39,7 @@ public static class VisualUI
                         // Do nothing
                     });
 
-                    visualControlInfo.Controls.ForEach(c =>
-                    {
-                        if (c is SpinBox spinBox)
-                        {
-                            spinBox.Editable = false;
-                        }
-                        else if (c is LineEdit lineEdit)
-                        {
-                            lineEdit.Editable = false;
-                        }
-                        else if (c is CheckBox checkBox)
-                        {
-                            checkBox.Disabled = true;
-                        }
-                        else if (c is OptionButton optionButton)
-                        {
-                            optionButton.Disabled = true;
-                        }
-                        else if (c is ColorPickerButton colorPickerButton)
-                        {
-                            colorPickerButton.Disabled = true;
-                        }
-                        // Add more control types here as needed
-                    });
+                    visualControlInfo.Control.SetEditable(false);
 
                     updateControls.Add(() =>
                     {
