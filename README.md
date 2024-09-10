@@ -1,4 +1,4 @@
-https://github.com/user-attachments/assets/a8615166-0a5c-4f8c-a144-7c0f9c5ef185
+https://github.com/user-attachments/assets/6bc843de-dc90-44f8-9513-17783f144ae2
 
 #### Example Usage
 ```cs
@@ -6,6 +6,7 @@ using Godot;
 using System.Collections.Generic;
 using Visualize;
 
+[Visualize(nameof(Position), nameof(Rotation))]
 public partial class VisualizeExample : Sprite2D
 {
     [Visualize] Vector2I position;
