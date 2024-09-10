@@ -89,11 +89,12 @@ public static class VisualUI
 
         visualNodes.Add(node, vboxLogs);
 
-        // Add vbox to scene tree to get vbox.Size for later
-        tree.Root.AddChild(vboxMembers);
+        // Add to canvas layer so UI is not affected by lighting in game world
+        CanvasLayer canvasLayer = new();
+        canvasLayer.FollowViewportEnabled = true;
+        canvasLayer.AddChild(vboxMembers);
 
-        // All debug UI elements should not be influenced by the game world environments lighting
-        node.GetChildren<Control>().ForEach(child => child.SetUnshaded());
+        tree.Root.CallDeferred(Node.MethodName.AddChild, canvasLayer);
 
         vboxMembers.Scale = Vector2.One * VISUAL_UI_SCALE_FACTOR;
 

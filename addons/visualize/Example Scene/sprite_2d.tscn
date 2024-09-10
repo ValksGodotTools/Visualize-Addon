@@ -4,6 +4,5 @@
 [ext_resource type="Script" path="res://addons/visualize/Example Scene/VisualizeExample.cs" id="2_ssjtg"]
 
 [node name="Sprite2D" type="Sprite2D"]
-position = Vector2(560, 301)
 texture = ExtResource("1_72sk8")
 script = ExtResource("2_ssjtg")
