@@ -1,6 +1,7 @@
 using Godot;
 using System.Collections.Generic;
 using Visualize;
+using Visualize.Utils;
 
 namespace Visualize.Example;
 

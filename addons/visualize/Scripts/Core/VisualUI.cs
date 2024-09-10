@@ -11,80 +11,78 @@ public static class VisualUI
 {
     public const float VISUAL_UI_SCALE_FACTOR = 0.6f;
 
-    public static List<Action> CreateVisualPanels(List<VisualNode> debugVisualNodes, List<VisualSpinBox> debugExportSpinBoxes)
+    public static List<Action> CreateVisualPanel(VisualNode debugVisualNode)
     {
+        List<VisualSpinBox> debugExportSpinBoxes = new();
         Dictionary<Node, VBoxContainer> visualNodes = new();
         List<Action> updateControls = new();
 
-        foreach (VisualNode debugVisualNode in debugVisualNodes)
+        Node node = debugVisualNode.Node;
+
+        VBoxContainer vboxMembers = CreateVisualContainer(node.Name);
+
+        string[] visualizeMembers = debugVisualNode.VisualizeMembers;
+
+        if (visualizeMembers != null)
         {
-            Node node = debugVisualNode.Node;
-
-            VBoxContainer vboxMembers = CreateVisualContainer(node.Name);
-
-            string[] visualizeMembers = debugVisualNode.VisualizeMembers;
-
-            if (visualizeMembers != null)
+            foreach (string visualMember in visualizeMembers)
             {
-                foreach (string visualMember in visualizeMembers)
+                PropertyInfo property = node.GetType().GetProperty(visualMember);
+
+                object initialValue = property.GetValue(node);
+
+                VisualControlInfo visualControlInfo = VisualControlTypes.CreateControlForType(initialValue, property.PropertyType, debugExportSpinBoxes, v =>
                 {
-                    PropertyInfo property = node.GetType().GetProperty(visualMember);
+                    // Do nothing
+                });
 
-                    object initialValue = property.GetValue(node);
+                visualControlInfo.Control.SetEditable(false);
 
-                    VisualControlInfo visualControlInfo = VisualControlTypes.CreateControlForType(initialValue, property.PropertyType, debugExportSpinBoxes, v =>
-                    {
-                        // Do nothing
-                    });
+                updateControls.Add(() =>
+                {
+                    visualControlInfo.Control.SetValue(property.GetValue(node));
+                });
 
-                    visualControlInfo.Control.SetEditable(false);
+                HBoxContainer hbox = new();
+                hbox.AddChild(new Label { Text = property.Name });
+                hbox.AddChild(visualControlInfo.Control.Control);
 
-                    updateControls.Add(() =>
-                    {
-                        visualControlInfo.Control.SetValue(property.GetValue(node));
-                    });
-
-                    HBoxContainer hbox = new();
-                    hbox.AddChild(new Label { Text = property.Name });
-                    hbox.AddChild(visualControlInfo.Control.Control);
-
-                    vboxMembers.AddChild(hbox);
-                }
+                vboxMembers.AddChild(hbox);
             }
+        }
 
-            AddMemberInfoElements(vboxMembers, debugVisualNode.Properties, node, debugExportSpinBoxes);
+        AddMemberInfoElements(vboxMembers, debugVisualNode.Properties, node, debugExportSpinBoxes);
 
-            AddMemberInfoElements(vboxMembers, debugVisualNode.Fields, node, debugExportSpinBoxes);
+        AddMemberInfoElements(vboxMembers, debugVisualNode.Fields, node, debugExportSpinBoxes);
 
-            VisualMethods.AddMethodInfoElements(vboxMembers, debugVisualNode.Methods, node, debugExportSpinBoxes);
+        VisualMethods.AddMethodInfoElements(vboxMembers, debugVisualNode.Methods, node, debugExportSpinBoxes);
 
-            VBoxContainer vboxLogs = new();
-            vboxMembers.AddChild(vboxLogs);
+        VBoxContainer vboxLogs = new();
+        vboxMembers.AddChild(vboxLogs);
 
-            visualNodes.Add(node, vboxLogs);
+        visualNodes.Add(node, vboxLogs);
 
-            // Add vbox to scene tree to get vbox.Size for later
-            node.AddChild(vboxMembers);
+        // Add vbox to scene tree to get vbox.Size for later
+        node.AddChild(vboxMembers);
 
-            // Using RigidBodies as a temporary workaround to overlapping visual panels
-            // Of course updating the control positions would be better but I'm not sure
-            // how to do this right now
-            RigidBody2D rigidBody = CreateRigidBody(vboxMembers);
+        // Using RigidBodies as a temporary workaround to overlapping visual panels
+        // Of course updating the control positions would be better but I'm not sure
+        // how to do this right now
+        RigidBody2D rigidBody = CreateRigidBody(vboxMembers);
 
-            // Reparent vbox to rigidbody
-            vboxMembers.GetParent().RemoveChild(vboxMembers);
-            rigidBody.AddChild(vboxMembers);
-            node.AddChild(rigidBody);
+        // Reparent vbox to rigidbody
+        vboxMembers.GetParent().RemoveChild(vboxMembers);
+        rigidBody.AddChild(vboxMembers);
+        node.AddChild(rigidBody);
 
-            // All debug UI elements should not be influenced by the game world environments lighting
-            node.GetChildren<Control>().ForEach(child => child.SetUnshaded());
+        // All debug UI elements should not be influenced by the game world environments lighting
+        node.GetChildren<Control>().ForEach(child => child.SetUnshaded());
 
-            vboxMembers.Scale = Vector2.One * VISUAL_UI_SCALE_FACTOR;
+        vboxMembers.Scale = Vector2.One * VISUAL_UI_SCALE_FACTOR;
 
-            if (debugVisualNode.InitialPosition != Vector2.Zero)
-            {
-                vboxMembers.GlobalPosition = debugVisualNode.InitialPosition;
-            }
+        if (debugVisualNode.InitialPosition != Vector2.Zero)
+        {
+            vboxMembers.GlobalPosition = debugVisualNode.InitialPosition;
         }
 
         // This is ugly but I don't know how else to do it
