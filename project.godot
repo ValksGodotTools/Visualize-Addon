@@ -26,3 +26,7 @@ project/assembly_name="Visualize"
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/visualize/plugin.cfg")
+
+[plugin]
+
+visualize/enabled=true
