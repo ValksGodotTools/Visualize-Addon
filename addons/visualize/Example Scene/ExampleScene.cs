@@ -17,18 +17,13 @@ public partial class ExampleScene : Node
 		PackedScene packedScene = GD.Load<PackedScene>("res://addons/visualize/Example Scene/sprite_2d.tscn");
 		Sprite2D sprite = packedScene.Instantiate<Sprite2D>();
 
-        AddChild(sprite);
         // As you can see the visualize info is created at the moment of node creation
-        /*_ = new GTween(this)
+        _ = new GTween(this)
 			.Delay(0.1)
 			.Callback(() =>
 			{
                 AddChild(sprite);
-				GD.Print(sprite.Position);
-            })
-			.Delay(2)
-			.Callback(() => {
-			GD.Print(sprite.Position);	});*/
+            });
 	}
 
     public override void _Input(InputEvent @event)
