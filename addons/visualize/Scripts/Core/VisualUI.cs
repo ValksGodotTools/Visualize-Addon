@@ -28,12 +28,10 @@ public static class VisualUI
             {
                 foreach (string visualMember in visualizeMembers)
                 {
-                    GD.Print(visualMember);
-
                     PropertyInfo property = node.GetType().GetProperty(visualMember);
 
                     object initialValue = property.GetValue(node);
-                    
+
                     VisualControlInfo visualControlInfo = VisualControlTypes.CreateControlForType(initialValue, property.PropertyType, debugExportSpinBoxes, v =>
                     {
                         // Do nothing
@@ -46,7 +44,11 @@ public static class VisualUI
                         visualControlInfo.Control.SetValue(property.GetValue(node));
                     });
 
-                    vboxMembers.AddChild(visualControlInfo.Control.Control);
+                    HBoxContainer hbox = new();
+                    hbox.AddChild(new Label { Text = property.Name });
+                    hbox.AddChild(visualControlInfo.Control.Control);
+
+                    vboxMembers.AddChild(hbox);
                 }
             }
 
