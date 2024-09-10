@@ -1,11 +1,12 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 
 namespace Visualize;
 
 public partial class VisualizeAutoload : Node
 {
-    private List<VisualNode> _alwaysUpdateNodes;
+    private List<Action> updateControls;
 
 	public override void _Ready()
 	{
@@ -15,12 +16,15 @@ public partial class VisualizeAutoload : Node
         {
             List<VisualSpinBox> debugExportSpinBoxes = new();
 
-            VisualUI.CreateVisualPanels(visualAttributeData, debugExportSpinBoxes);
+            updateControls = VisualUI.CreateVisualPanels(visualAttributeData, debugExportSpinBoxes);
         }
     }
 
     public override void _PhysicsProcess(double delta)
     {
-        
+        foreach (Action action in updateControls)
+        {
+            action();
+        }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace Visualize.Example;
 
+[Visualize(nameof(Position))]
 public partial class VisualizeExample : Sprite2D
 {
 	[Visualize] Vector2I position;

@@ -21,12 +21,12 @@ public static class VisualizeAttributeHandler
             VisualizeAttribute attribute = (VisualizeAttribute)type.GetCustomAttribute(typeof(VisualizeAttribute), false);
 
             Vector2 initialPosition = Vector2.Zero;
-            bool alwaysUpdate = false;
+            string[] visualizeMembers = null;
             
             if (attribute != null)
             {
                 initialPosition = attribute.InitialPosition;
-                alwaysUpdate = attribute.AlwaysUpdate;
+                visualizeMembers = attribute.VisualizeMembers;
             }
 
             List<Node> nodes = parent.GetNodes(type);
@@ -39,7 +39,7 @@ public static class VisualizeAttributeHandler
 
                 if (properties.Any() || fields.Any() || methods.Any())
                 {
-                    debugVisualNodes.Add(new VisualNode(node, initialPosition, alwaysUpdate, properties, fields, methods));
+                    debugVisualNodes.Add(new VisualNode(node, initialPosition, visualizeMembers, properties, fields, methods));
                 }
             }
         }

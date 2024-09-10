@@ -7,17 +7,17 @@ namespace Visualize;
 public class VisualizeAttribute : Attribute
 {
     public Vector2 InitialPosition { get; }
-    public bool AlwaysUpdate { get; }
+    public string[] VisualizeMembers { get; }
 
     public VisualizeAttribute()
     {
         InitialPosition = Vector2.Zero;
     }
 
-    public VisualizeAttribute(bool alwaysUpdate)
+    public VisualizeAttribute(params string[] visualizeMembers)
     {
         InitialPosition = Vector2.Zero;
-        AlwaysUpdate = alwaysUpdate;
+        VisualizeMembers = visualizeMembers;
     }
 
     public VisualizeAttribute(float x, float y)

@@ -8,16 +8,16 @@ namespace Visualize;
 public class VisualNode
 {
     public Node Node { get; }
-    public bool AlwaysUpdate { get; }
+    public string[] VisualizeMembers { get; }
     public Vector2 InitialPosition { get; }
     public IEnumerable<PropertyInfo> Properties { get; }
     public IEnumerable<FieldInfo> Fields { get; }
     public IEnumerable<MethodInfo> Methods { get; }
 
-    public VisualNode(Node node, Vector2 initialPosition, bool alwaysUpdate, IEnumerable<PropertyInfo> properties, IEnumerable<FieldInfo> fields, IEnumerable<MethodInfo> methods)
+    public VisualNode(Node node, Vector2 initialPosition, string[] visualizeMembers, IEnumerable<PropertyInfo> properties, IEnumerable<FieldInfo> fields, IEnumerable<MethodInfo> methods)
     {
         Node = node;
-        AlwaysUpdate = alwaysUpdate;
+        VisualizeMembers = visualizeMembers;
         InitialPosition = initialPosition;
         Properties = properties;
         Fields = fields;

@@ -11,10 +11,10 @@ namespace Visualize;
 
 public static class VisualControlTypes
 {
-    public static Control CreateControlForType(object initialValue, Type type, List<VisualSpinBox> debugExportSpinBoxes, Action<object> valueChanged)
+    public static (Control, List<Control>) CreateControlForType(object initialValue, Type type, List<VisualSpinBox> debugExportSpinBoxes, Action<object> valueChanged)
     {
         // Order of which these are handled matters
-        Control control = type switch
+        (Control, List<Control>) info = type switch
         {
             // Handle C# specific types
             _ when type == typeof(bool) => Bool(initialValue, v => valueChanged(v)),
@@ -42,19 +42,20 @@ public static class VisualControlTypes
             _ when type.IsClass && !type.IsSubclassOf(typeof(GodotObject)) => Class(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
             _ when type.IsValueType && !type.IsClass && !type.IsSubclassOf(typeof(GodotObject)) => Class(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
 
-            _ => null
+            _ => (null, null)
         };
 
-        if (control == null)
+        if (info.Item1 == null)
         {
             GD.PushWarning($"The type '{type}' is not supported for the {nameof(VisualizeAttribute)}");
         }
 
-        return control;
+        return info;
     }
 
-    private static Control Class(object target, Type type, List<VisualSpinBox> debugExportSpinBoxes, Action<object> valueChanged)
+    private static (Control, List<Control>) Class(object target, Type type, List<VisualSpinBox> debugExportSpinBoxes, Action<object> valueChanged)
     {
+        List<Control> controls = new();
         BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
         PropertyInfo[] properties = type.GetProperties(flags);
@@ -79,17 +80,19 @@ public static class VisualControlTypes
         {
             object initialValue = property.GetValue(target); // Non-Static method requires a target
 
-            Control control = CreateControlForType(initialValue, property.PropertyType, debugExportSpinBoxes, v =>
+            (Control, List<Control>) control = CreateControlForType(initialValue, property.PropertyType, debugExportSpinBoxes, v =>
             {
                 property.SetValue(target, v);
                 valueChanged(target);
             });
 
-            if (control != null)
+            control.Item2.ForEach(x => controls.Add(x));
+
+            if (control.Item1 != null)
             {
                 HBoxContainer hbox = new();
                 hbox.AddChild(new Label { Text = property.Name.ToPascalCase().AddSpaceBeforeEachCapital() });
-                hbox.AddChild(control);
+                hbox.AddChild(control.Item1);
                 vbox.AddChild(hbox);
             }
         }
@@ -98,30 +101,32 @@ public static class VisualControlTypes
         {
             object initialValue = field.GetValue(target);
 
-            Control control = CreateControlForType(initialValue, field.FieldType, debugExportSpinBoxes, v =>
+            (Control, List<Control>) control = CreateControlForType(initialValue, field.FieldType, debugExportSpinBoxes, v =>
             {
                 field.SetValue(target, v);
                 valueChanged(target);
             });
 
-            if (control != null)
+            control.Item2.ForEach(x => controls.Add(x));
+
+            if (control.Item1 != null)
             {
-                if (control is SpinBox spinBox)
+                if (control.Item1 is SpinBox spinBox)
                 {
                     spinBox.Editable = !field.IsLiteral;
                 }
-                else if (control is LineEdit lineEdit)
+                else if (control.Item1 is LineEdit lineEdit)
                 {
                     lineEdit.Editable = !field.IsLiteral;
                 }
-                else if (control is BaseButton baseButton)
+                else if (control.Item1 is BaseButton baseButton)
                 {
                     baseButton.Disabled = field.IsLiteral;
                 }
 
                 HBoxContainer hbox = new();
                 hbox.AddChild(new Label { Text = field.Name.ToPascalCase().AddSpaceBeforeEachCapital() });
-                hbox.AddChild(control);
+                hbox.AddChild(control.Item1);
                 vbox.AddChild(hbox);
             }
         }
@@ -140,11 +145,12 @@ public static class VisualControlTypes
             vbox.AddChild(button);
         }
 
-        return vbox;
+        return (vbox, controls);
     }
 
-    private static Control Dictionary(object initialValue, Type type, List<VisualSpinBox> debugExportSpinBoxes, Action<IDictionary> valueChanged)
+    private static (Control, List<Control>) Dictionary(object initialValue, Type type, List<VisualSpinBox> debugExportSpinBoxes, Action<IDictionary> valueChanged)
     {
+        List<Control> controls = new();
         VBoxContainer dictionaryVBox = new()
         {
             SizeFlagsHorizontal = SizeFlags.ShrinkEnd | SizeFlags.Expand
@@ -169,14 +175,16 @@ public static class VisualControlTypes
             object value = entry.Value;
 
             // The control for changing the value of the dictionary
-            Control valueControl = CreateControlForType(value, valueType, debugExportSpinBoxes, v =>
+            (Control, List<Control>) valueControl = CreateControlForType(value, valueType, debugExportSpinBoxes, v =>
             {
                 dictionary[key] = v;
                 valueChanged(dictionary);
             });
 
+            valueControl.Item2.ForEach(x => controls.Add(x));
+
             // The control for changing the key of the dictionary
-            Control keyControl = CreateControlForType(key, keyType, debugExportSpinBoxes, v =>
+            (Control, List<Control>) keyControl = CreateControlForType(key, keyType, debugExportSpinBoxes, v =>
             {
                 if (dictionary.Contains(v))
                 {
@@ -200,15 +208,17 @@ public static class VisualControlTypes
                         valueChanged(dictionary);
 
                         // Visually reset the value for this dictionary back to the default value
-                        SetControlValue(valueControl, defaultValue);
+                        SetControlValue(valueControl.Item1, defaultValue);
                     }
                 }
             });
 
-            if (keyControl != null && valueControl != null)
+            keyControl.Item2.ForEach(x => controls.Add(x));
+
+            if (keyControl.Item1 != null && valueControl.Item1 != null)
             {
-                SetControlValue(keyControl, key);
-                SetControlValue(valueControl, value);
+                SetControlValue(keyControl.Item1, key);
+                SetControlValue(valueControl.Item1, value);
 
                 Button removeKeyEntryButton = new()
                 {
@@ -224,8 +234,8 @@ public static class VisualControlTypes
                     valueChanged(dictionary);
                 };
 
-                hbox.AddChild(keyControl);
-                hbox.AddChild(valueControl);
+                hbox.AddChild(keyControl.Item1);
+                hbox.AddChild(valueControl.Item1);
                 hbox.AddChild(removeKeyEntryButton);
 
                 dictionaryVBox.AddChild(hbox);
@@ -246,14 +256,16 @@ public static class VisualControlTypes
             object oldKey = defaultKey;
 
             // The control for changing the value of the dictionary
-            Control valueControl = CreateControlForType(defaultValue, valueType, debugExportSpinBoxes, v =>
+            (Control, List<Control>) valueControl = CreateControlForType(defaultValue, valueType, debugExportSpinBoxes, v =>
             {
                 dictionary[oldKey] = v;
                 valueChanged(dictionary);
             });
 
+            valueControl.Item2.ForEach(x => controls.Add(x));
+
             // The control for changing the key of the dictionary
-            Control keyControl = CreateControlForType(defaultKey, keyType, debugExportSpinBoxes, v =>
+            (Control, List<Control>) keyControl = CreateControlForType(defaultKey, keyType, debugExportSpinBoxes, v =>
             {
                 if (dictionary.Contains(v))
                 {
@@ -277,12 +289,14 @@ public static class VisualControlTypes
                         valueChanged(dictionary);
 
                         // Visually reset the value for this dictionary back to the default value
-                        SetControlValue(valueControl, defaultValue);
+                        SetControlValue(valueControl.Item1, defaultValue);
                     }
                 }
             });
 
-            if (keyControl != null && valueControl != null)
+            keyControl.Item2.ForEach(x => controls.Add(x));
+
+            if (keyControl.Item1 != null && valueControl.Item1 != null)
             {
                 Button removeKeyEntryButton = new();
                 removeKeyEntryButton.Text = "-";
@@ -296,8 +310,8 @@ public static class VisualControlTypes
                     valueChanged(dictionary);
                 };
 
-                hbox.AddChild(keyControl);
-                hbox.AddChild(valueControl);
+                hbox.AddChild(keyControl.Item1);
+                hbox.AddChild(valueControl.Item1);
                 hbox.AddChild(removeKeyEntryButton);
 
                 dictionaryVBox.AddChild(hbox);
@@ -311,11 +325,12 @@ public static class VisualControlTypes
         addButton.Pressed += AddNewEntryToDictionary;
         dictionaryVBox.AddChild(addButton);
 
-        return dictionaryVBox;
+        return (dictionaryVBox, controls);
     }
 
-    private static Control List(object initialValue, Type type, List<VisualSpinBox> debugExportSpinBoxes, Action<IList> valueChanged)
+    private static (Control, List<Control>) List(object initialValue, Type type, List<VisualSpinBox> debugExportSpinBoxes, Action<IList> valueChanged)
     {
+        List<Control> controls = new();
         VBoxContainer listVBox = new()
         {
             SizeFlagsHorizontal = SizeFlags.ShrinkEnd | SizeFlags.Expand
@@ -335,13 +350,15 @@ public static class VisualControlTypes
 
             int newIndex = list.Count - 1;
 
-            Control control = CreateControlForType(newValue, elementType, debugExportSpinBoxes, v =>
+            (Control, List<Control>) control = CreateControlForType(newValue, elementType, debugExportSpinBoxes, v =>
             {
                 list[newIndex] = v;
                 valueChanged(list);
             });
 
-            if (control != null)
+            control.Item2.ForEach(x => controls.Add(x));
+
+            if (control.Item1 != null)
             {
                 // Add a new entry to the UI
                 HBoxContainer hbox = new();
@@ -355,7 +372,7 @@ public static class VisualControlTypes
                     valueChanged(list);
                 };
 
-                hbox.AddChild(control);
+                hbox.AddChild(control.Item1);
                 hbox.AddChild(minusButton);
                 listVBox.AddChild(hbox);
 
@@ -369,15 +386,15 @@ public static class VisualControlTypes
         {
             object value = list[i];
 
-            Control control = CreateControlForType(value, elementType, debugExportSpinBoxes, v =>
+            (Control, List<Control>) control = CreateControlForType(value, elementType, debugExportSpinBoxes, v =>
             {
                 list[i] = v;
                 valueChanged(list);
             });
 
-            if (control != null)
+            if (control.Item1 != null)
             {
-                SetControlValue(control, value);
+                SetControlValue(control.Item1, value);
 
                 Button minusButton = new() { Text = "-" };
 
@@ -391,7 +408,7 @@ public static class VisualControlTypes
                     valueChanged(list);
                 };
 
-                hbox.AddChild(control);
+                hbox.AddChild(control.Item1);
                 hbox.AddChild(minusButton);
                 listVBox.AddChild(hbox);
             }
@@ -401,11 +418,12 @@ public static class VisualControlTypes
         addButton.Pressed += AddNewEntryToList;
         listVBox.AddChild(addButton);
 
-        return listVBox;
+        return (listVBox, controls);
     }
 
-    private static Control Array(object initialValue, Type type, List<VisualSpinBox> debugExportSpinBoxes, Action<Array> valueChanged)
+    private static (Control, List<Control>) Array(object initialValue, Type type, List<VisualSpinBox> debugExportSpinBoxes, Action<Array> valueChanged)
     {
+        List<Control> controls = new();
         VBoxContainer arrayVBox = new()
         {
             SizeFlagsHorizontal = SizeFlags.ShrinkEnd | SizeFlags.Expand
@@ -428,14 +446,16 @@ public static class VisualControlTypes
 
             int newIndex = array.Length - 1;
 
-            Control control = CreateControlForType(newValue, elementType, debugExportSpinBoxes, v =>
+            (Control, List<Control>) control = CreateControlForType(newValue, elementType, debugExportSpinBoxes, v =>
             {
                 array.SetValue(v, newIndex);
 
                 valueChanged(array);
             });
 
-            if (control != null)
+            control.Item2.ForEach(x => controls.Add(x));
+
+            if (control.Item1 != null)
             {
                 Button minusButton = new() { Text = "-" };
 
@@ -450,7 +470,7 @@ public static class VisualControlTypes
                     valueChanged(array);
                 };
 
-                hbox.AddChild(control);
+                hbox.AddChild(control.Item1);
                 hbox.AddChild(minusButton);
                 arrayVBox.AddChild(hbox);
 
@@ -464,15 +484,17 @@ public static class VisualControlTypes
         {
             object value = array.GetValue(i);
 
-            Control control = CreateControlForType(value, elementType, debugExportSpinBoxes, v =>
+            (Control, List<Control>) control = CreateControlForType(value, elementType, debugExportSpinBoxes, v =>
             {
                 array.SetValue(v, i);
                 valueChanged(array);
             });
 
-            if (control != null)
+            control.Item2.ForEach(x => controls.Add(x));
+
+            if (control.Item1 != null)
             {
-                SetControlValue(control, value);
+                SetControlValue(control.Item1, value);
 
                 Button minusButton = new() { Text = "-" };
 
@@ -486,7 +508,7 @@ public static class VisualControlTypes
                     valueChanged(array);
                 };
 
-                hbox.AddChild(control);
+                hbox.AddChild(control.Item1);
                 hbox.AddChild(minusButton);
                 arrayVBox.AddChild(hbox);
             }
@@ -496,11 +518,12 @@ public static class VisualControlTypes
         addButton.Pressed += AddNewEntryToArray;
         arrayVBox.AddChild(addButton);
 
-        return arrayVBox;
+        return (arrayVBox, controls);
     }
 
-    private static Control StringName(object initialValue, Action<StringName> valueChanged)
+    private static (Control, List<Control>) StringName(object initialValue, Action<StringName> valueChanged)
     {
+        List<Control> controls = new();
         StringName stringName = (StringName)initialValue;
         string initialText = stringName != null ? stringName.ToString() : string.Empty;
 
@@ -514,11 +537,14 @@ public static class VisualControlTypes
             valueChanged(new StringName(text));
         };
 
-        return lineEdit;
+        controls.Add(lineEdit);
+
+        return (lineEdit, controls);
     }
 
-    private static Control NodePath(object initialValue, Action<NodePath> valueChanged)
+    private static (Control, List<Control>) NodePath(object initialValue, Action<NodePath> valueChanged)
     {
+        List<Control> controls = new();
         NodePath nodePath = (NodePath)initialValue;
 
         string initialText = nodePath != null ? nodePath.ToString() : string.Empty;
@@ -533,11 +559,14 @@ public static class VisualControlTypes
             valueChanged(new NodePath(text));
         };
 
-        return lineEdit;
+        controls.Add(lineEdit);
+
+        return (lineEdit, controls);
     }
 
-    private static Control Object(object initialValue, Action<object> valueChanged)
+    private static (Control, List<Control>) Object(object initialValue, Action<object> valueChanged)
     {
+        List<Control> controls = new();
         LineEdit lineEdit = new()
         {
             Text = initialValue?.ToString() ?? string.Empty
@@ -548,11 +577,14 @@ public static class VisualControlTypes
             valueChanged(text);
         };
 
-        return lineEdit;
+        controls.Add(lineEdit);
+
+        return (lineEdit, controls);
     }
 
-    private static Control Quaternion(object initialValue, Action<Quaternion> valueChanged)
+    private static (Control, List<Control>) Quaternion(object initialValue, Action<Quaternion> valueChanged)
     {
+        List<Control> controls = new();
         HBoxContainer quaternionHBox = new();
 
         Quaternion quaternion = (Quaternion)initialValue;
@@ -600,11 +632,17 @@ public static class VisualControlTypes
         quaternionHBox.AddChild(new Label { Text = "W" });
         quaternionHBox.AddChild(spinBoxW);
 
-        return quaternionHBox;
+        controls.Add(spinBoxX);
+        controls.Add(spinBoxY);
+        controls.Add(spinBoxZ);
+        controls.Add(spinBoxW);
+
+        return (quaternionHBox, controls);
     }
 
-    private static Control Vector2(object initialValue, Action<Vector2> valueChanged)
+    private static (Control, List<Control>) Vector2(object initialValue, Action<Vector2> valueChanged)
     {
+        List<Control> controls = new();
         HBoxContainer vector2HBox = new();
 
         Vector2 vector2 = (Vector2)initialValue;
@@ -632,11 +670,15 @@ public static class VisualControlTypes
         vector2HBox.AddChild(new Label { Text = "Y" });
         vector2HBox.AddChild(spinBoxY);
 
-        return vector2HBox;
+        controls.Add(spinBoxX);
+        controls.Add(spinBoxY);
+
+        return (vector2HBox, controls);
     }
 
-    private static Control Vector2I(object initialValue, Action<Vector2I> valueChanged)
+    private static (Control, List<Control>) Vector2I(object initialValue, Action<Vector2I> valueChanged)
     {
+        List<Control> controls = new();
         HBoxContainer vector2IHBox = new();
 
         Vector2I vector2I = (Vector2I)initialValue;
@@ -664,11 +706,15 @@ public static class VisualControlTypes
         vector2IHBox.AddChild(new Label { Text = "Y" });
         vector2IHBox.AddChild(spinBoxY);
 
-        return vector2IHBox;
+        controls.Add(spinBoxX);
+        controls.Add(spinBoxY);
+
+        return (vector2IHBox, controls);
     }
 
-    private static Control Vector3(object initialValue, Action<Vector3> valueChanged)
+    private static (Control, List<Control>) Vector3(object initialValue, Action<Vector3> valueChanged)
     {
+        List<Control> controls = new();
         HBoxContainer vector3HBox = new();
 
         Vector3 vector3 = (Vector3)initialValue;
@@ -706,11 +752,16 @@ public static class VisualControlTypes
         vector3HBox.AddChild(new Label { Text = "Z" });
         vector3HBox.AddChild(spinBoxZ);
 
-        return vector3HBox;
+        controls.Add(spinBoxX);
+        controls.Add(spinBoxY);
+        controls.Add(spinBoxZ);
+
+        return (vector3HBox, controls);
     }
 
-    private static Control Vector3I(object initialValue, Action<Vector3I> valueChanged)
+    private static (Control, List<Control>) Vector3I(object initialValue, Action<Vector3I> valueChanged)
     {
+        List<Control> controls = new();
         HBoxContainer vector3IHBox = new();
 
         Vector3I vector3I = (Vector3I)initialValue;
@@ -748,11 +799,16 @@ public static class VisualControlTypes
         vector3IHBox.AddChild(new Label { Text = "Z" });
         vector3IHBox.AddChild(spinBoxZ);
 
-        return vector3IHBox;
+        controls.Add(spinBoxX);
+        controls.Add(spinBoxY);
+        controls.Add(spinBoxZ);
+
+        return (vector3IHBox, controls);
     }
 
-    private static Control Vector4(object initialValue, Action<Vector4> valueChanged)
+    private static (Control, List<Control>) Vector4(object initialValue, Action<Vector4> valueChanged)
     {
+        List<Control> controls = new();
         HBoxContainer vector4HBox = new();
 
         Vector4 vector4 = (Vector4)initialValue;
@@ -800,11 +856,17 @@ public static class VisualControlTypes
         vector4HBox.AddChild(new Label { Text = "W" });
         vector4HBox.AddChild(spinBoxW);
 
-        return vector4HBox;
+        controls.Add(spinBoxX);
+        controls.Add(spinBoxY);
+        controls.Add(spinBoxZ);
+        controls.Add(spinBoxW);
+
+        return (vector4HBox, controls);
     }
 
-    private static Control Vector4I(object initialValue, Action<Vector4I> valueChanged)
+    private static (Control, List<Control>) Vector4I(object initialValue, Action<Vector4I> valueChanged)
     {
+        List<Control> controls = new();
         HBoxContainer vector4IHBox = new();
 
         Vector4I vector4I = (Vector4I)initialValue;
@@ -852,11 +914,17 @@ public static class VisualControlTypes
         vector4IHBox.AddChild(new Label { Text = "W" });
         vector4IHBox.AddChild(spinBoxW);
 
-        return vector4IHBox;
+        controls.Add(spinBoxX);
+        controls.Add(spinBoxY);
+        controls.Add(spinBoxZ);
+        controls.Add(spinBoxW);
+
+        return (vector4IHBox, controls);
     }
 
-    private static Control Numeric(object initialValue, Type type, List<VisualSpinBox> debugExportSpinBoxes, Action<object> valueChanged)
+    private static (Control, List<Control>) Numeric(object initialValue, Type type, List<VisualSpinBox> debugExportSpinBoxes, Action<object> valueChanged)
     {
+        List<Control> controls = new();
         SpinBox spinBox = CreateSpinBox(type);
 
         spinBox.Value = Convert.ToDouble(initialValue);
@@ -866,32 +934,41 @@ public static class VisualControlTypes
             valueChanged(convertedValue);
         };
 
-        return spinBox;
+        controls.Add(spinBox);
+
+        return (spinBox, controls);
     }
 
-    private static Control Bool(object initialValue, Action<bool> valueChanged)
+    private static (Control, List<Control>) Bool(object initialValue, Action<bool> valueChanged)
     {
+        List<Control> controls = new();
         CheckBox checkBox = new()
         {
             ButtonPressed = (bool)initialValue
         };
         checkBox.Toggled += value => valueChanged(value);
 
-        return checkBox;
+        controls.Add(checkBox);
+
+        return (checkBox, controls);
     }
 
-    private static Control Color(object initialValue, Action<Color> valueChanged)
+    private static (Control, List<Control>) Color(object initialValue, Action<Color> valueChanged)
     {
+        List<Control> controls = new();
         Color initialColor = (Color)initialValue;
 
         GColorPickerButton colorPickerButton = new(initialColor);
         colorPickerButton.OnColorChanged += color => valueChanged(color);
 
-        return colorPickerButton.Control;
+        controls.Add(colorPickerButton.Control);
+
+        return (colorPickerButton.Control, controls);
     }
 
-    private static Control String(object initialValue, Action<string> valueChanged)
+    private static (Control, List<Control>) String(object initialValue, Action<string> valueChanged)
     {
+        List<Control> controls = new();
         LineEdit lineEdit = new()
         {
             Text = initialValue.ToString()
@@ -899,16 +976,21 @@ public static class VisualControlTypes
 
         lineEdit.TextChanged += text => valueChanged(text);
 
-        return lineEdit;
+        controls.Add(lineEdit);
+
+        return (lineEdit, controls);
     }
 
-    private static Control Enum(object initialValue, Type type, Action<object> valueChanged)
+    private static (Control, List<Control>) Enum(object initialValue, Type type, Action<object> valueChanged)
     {
+        List<Control> controls = new();
         GOptionButtonEnum optionButton = new(type);
         optionButton.Select(initialValue);
         optionButton.OnItemSelected += item => valueChanged(item);
 
-        return optionButton.Control;
+        controls.Add(optionButton.Control);
+
+        return (optionButton.Control, controls);
     }
 
     #region Util Functions

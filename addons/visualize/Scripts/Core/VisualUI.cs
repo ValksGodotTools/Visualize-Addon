@@ -11,15 +11,63 @@ public static class VisualUI
 {
     public const float VISUAL_UI_SCALE_FACTOR = 0.6f;
 
-    public static void CreateVisualPanels(List<VisualNode> debugVisualNodes, List<VisualSpinBox> debugExportSpinBoxes)
+    public static List<Action> CreateVisualPanels(List<VisualNode> debugVisualNodes, List<VisualSpinBox> debugExportSpinBoxes)
     {
         Dictionary<Node, VBoxContainer> visualNodes = new();
+        List<Action> updateControls = new();
 
         foreach (VisualNode debugVisualNode in debugVisualNodes)
         {
             Node node = debugVisualNode.Node;
 
             VBoxContainer vboxMembers = CreateVisualContainer(node.Name);
+
+            string[] visualizeMembers = debugVisualNode.VisualizeMembers;
+
+            if (visualizeMembers != null)
+            {
+                foreach (string visualMember in visualizeMembers)
+                {
+                    PropertyInfo property = node.GetType().GetProperty(visualMember);
+
+                    object initialValue = property.GetValue(node);
+                    
+                    (Control, List<Control>) element = VisualControlTypes.CreateControlForType(initialValue, property.PropertyType, debugExportSpinBoxes, v =>
+                    {
+                        // Do nothing
+                    });
+
+                    if (property.PropertyType == typeof(Vector2))
+                    {
+
+                    }
+
+                    foreach (Control control in element.Item2)
+                    {
+                        Action action = () => { };
+
+                        if (control is SpinBox spinBox)
+                        {
+                            spinBox.Editable = false;
+
+                            action = () => spinBox.Value = (double)Convert.ChangeType(property.GetValue(node), typeof(double));
+
+                        }
+                        else if (control is LineEdit lineEdit)
+                        {
+                            lineEdit.Editable = false;
+                        }
+                        else if (control is BaseButton baseButton)
+                        {
+                            baseButton.Disabled = true;
+                        }
+
+                        updateControls.Add(action);
+                    }
+
+                    vboxMembers.AddChild(element.Item1);
+                }
+            }
 
             AddMemberInfoElements(vboxMembers, debugVisualNode.Properties, node, debugExportSpinBoxes);
 
@@ -58,6 +106,8 @@ public static class VisualUI
 
         // This is ugly but I don't know how else to do it
         VisualLogger.VisualNodes = visualNodes;
+
+        return updateControls;
     }
 
     private static RigidBody2D CreateRigidBody(VBoxContainer vbox)
@@ -115,12 +165,12 @@ public static class VisualUI
 
         object initialValue = VisualHandler.GetMemberValue(member, node);
 
-        Control element = VisualControlTypes.CreateControlForType(initialValue, type, debugExportSpinBoxes, v =>
+        (Control, List<Control>) element = VisualControlTypes.CreateControlForType(initialValue, type, debugExportSpinBoxes, v =>
         {
             VisualHandler.SetMemberValue(member, node, v);
         });
 
-        if (element != null)
+        if (element.Item1 != null)
         {
             Label label = new()
             {
@@ -129,7 +179,7 @@ public static class VisualUI
             };
 
             hbox.AddChild(label);
-            hbox.AddChild(element);
+            hbox.AddChild(element.Item1);
         }
 
         return hbox;

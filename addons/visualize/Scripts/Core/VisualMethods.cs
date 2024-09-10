@@ -24,13 +24,13 @@ public static class VisualMethods
 
             int capturedIndex = i;
 
-            Control control = VisualControlTypes.CreateControlForType(providedValues[i], paramType, debugExportSpinBoxes,
+            (Control, List<Control>) control = VisualControlTypes.CreateControlForType(providedValues[i], paramType, debugExportSpinBoxes,
                 v => providedValues[capturedIndex] = v);
 
-            if (control != null)
+            if (control.Item1 != null)
             {
                 hboxParams.AddChild(new Label { Text = paramInfo.Name.ToPascalCase().AddSpaceBeforeEachCapital() });
-                hboxParams.AddChild(control);
+                hboxParams.AddChild(control.Item1);
             }
         }
 
