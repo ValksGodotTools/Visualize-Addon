@@ -69,12 +69,12 @@ public static class VisualUI
                         ? property.GetValue(property.GetGetMethod(true).IsStatic ? null : node)
                         : field.GetValue(field.IsStatic ? null : node);
 
-                    visualControlInfo.Control.SetValue(newValue);
+                    visualControlInfo.VisualControl.SetValue(newValue);
                 });
 
                 HBoxContainer hbox = new() { Modulate = new Color(1.0f, 0.75f, 0.8f, 1) };
                 hbox.AddChild(new Label { Text = visualMember });
-                hbox.AddChild(visualControlInfo.Control.Control);
+                hbox.AddChild(visualControlInfo.VisualControl.Control);
                 readonlyMembers.AddChild(hbox);
             }
         }
@@ -162,7 +162,7 @@ public static class VisualUI
             VisualHandler.SetMemberValue(member, node, v);
         });
 
-        if (element.Control.Control != null)
+        if (element.VisualControl.Control != null)
         {
             Label label = new()
             {
@@ -171,7 +171,7 @@ public static class VisualUI
             };
 
             hbox.AddChild(label);
-            hbox.AddChild(element.Control.Control);
+            hbox.AddChild(element.VisualControl.Control);
         }
 
         return hbox;

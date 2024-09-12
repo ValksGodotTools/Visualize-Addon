@@ -11,11 +11,11 @@ namespace Visualize.Core;
 
 public class VisualControlInfo
 {
-    public IVisualControl Control { get; }
+    public IVisualControl VisualControl { get; }
 
-    public VisualControlInfo(IVisualControl control)
+    public VisualControlInfo(IVisualControl visualControl)
     {
-        Control = control;
+        VisualControl = visualControl;
     }
 }
 
@@ -48,7 +48,7 @@ public static class VisualControlTypes
             _ => new VisualControlInfo(null)
         };
 
-        if (info.Control == null)
+        if (info.VisualControl == null)
         {
             GD.PushWarning($"The type '{type}' is not supported for the {nameof(VisualizeAttribute)}");
         }
@@ -77,11 +77,11 @@ public static class VisualControlTypes
                 valueChanged(target);
             });
 
-            if (control.Control != null)
+            if (control.VisualControl != null)
             {
                 HBoxContainer hbox = new();
                 hbox.AddChild(new Label { Text = property.Name.ToPascalCase().AddSpaceBeforeEachCapital() });
-                hbox.AddChild(control.Control.Control);
+                hbox.AddChild(control.VisualControl.Control);
                 vbox.AddChild(hbox);
             }
         }
@@ -95,24 +95,24 @@ public static class VisualControlTypes
                 valueChanged(target);
             });
 
-            if (control.Control != null)
+            if (control.VisualControl != null)
             {
-                if (control.Control.Control is SpinBox spinBox)
+                if (control.VisualControl.Control is SpinBox spinBox)
                 {
                     spinBox.Editable = !field.IsLiteral;
                 }
-                else if (control.Control.Control is LineEdit lineEdit)
+                else if (control.VisualControl.Control is LineEdit lineEdit)
                 {
                     lineEdit.Editable = !field.IsLiteral;
                 }
-                else if (control.Control.Control is BaseButton baseButton)
+                else if (control.VisualControl.Control is BaseButton baseButton)
                 {
                     baseButton.Disabled = field.IsLiteral;
                 }
 
                 HBoxContainer hbox = new();
                 hbox.AddChild(new Label { Text = field.Name.ToPascalCase().AddSpaceBeforeEachCapital() });
-                hbox.AddChild(control.Control.Control);
+                hbox.AddChild(control.VisualControl.Control);
                 vbox.AddChild(hbox);
             }
         }
@@ -168,13 +168,13 @@ public static class VisualControlTypes
                 dictionary[v] = value;
                 key = v;
                 valueChanged(dictionary);
-                SetControlValue(valueControl.Control.Control, defaultValue);
+                SetControlValue(valueControl.VisualControl.Control, defaultValue);
             });
 
-            if (keyControl.Control != null && valueControl.Control != null)
+            if (keyControl.VisualControl != null && valueControl.VisualControl != null)
             {
-                SetControlValue(keyControl.Control.Control, key);
-                SetControlValue(valueControl.Control.Control, value);
+                SetControlValue(keyControl.VisualControl.Control, key);
+                SetControlValue(valueControl.VisualControl.Control, value);
 
                 Button removeKeyEntryButton = new() { Text = "-" };
                 HBoxContainer hbox = new();
@@ -186,8 +186,8 @@ public static class VisualControlTypes
                     valueChanged(dictionary);
                 };
 
-                hbox.AddChild(keyControl.Control.Control);
-                hbox.AddChild(valueControl.Control.Control);
+                hbox.AddChild(keyControl.VisualControl.Control);
+                hbox.AddChild(valueControl.VisualControl.Control);
                 hbox.AddChild(removeKeyEntryButton);
                 dictionaryVBox.AddChild(hbox);
             }
@@ -219,10 +219,10 @@ public static class VisualControlTypes
                 dictionary[v] = defaultValue;
                 oldKey = v;
                 valueChanged(dictionary);
-                SetControlValue(valueControl.Control.Control, defaultValue);
+                SetControlValue(valueControl.VisualControl.Control, defaultValue);
             });
 
-            if (keyControl.Control != null && valueControl.Control != null)
+            if (keyControl.VisualControl != null && valueControl.VisualControl != null)
             {
                 Button removeKeyEntryButton = new() { Text = "-" };
                 HBoxContainer hbox = new();
@@ -234,8 +234,8 @@ public static class VisualControlTypes
                     valueChanged(dictionary);
                 };
 
-                hbox.AddChild(keyControl.Control.Control);
-                hbox.AddChild(valueControl.Control.Control);
+                hbox.AddChild(keyControl.VisualControl.Control);
+                hbox.AddChild(valueControl.VisualControl.Control);
                 hbox.AddChild(removeKeyEntryButton);
                 dictionaryVBox.AddChild(hbox);
                 dictionaryVBox.MoveChild(addButton, dictionaryVBox.GetChildCount() - 1);
@@ -270,7 +270,7 @@ public static class VisualControlTypes
                 valueChanged(list);
             });
 
-            if (control.Control != null)
+            if (control.VisualControl != null)
             {
                 HBoxContainer hbox = new();
                 Button minusButton = new() { Text = "-" };
@@ -283,7 +283,7 @@ public static class VisualControlTypes
                     valueChanged(list);
                 };
 
-                hbox.AddChild(control.Control.Control);
+                hbox.AddChild(control.VisualControl.Control);
                 hbox.AddChild(minusButton);
                 listVBox.AddChild(hbox);
                 listVBox.MoveChild(addButton, listVBox.GetChildCount() - 1);
@@ -299,9 +299,9 @@ public static class VisualControlTypes
                 valueChanged(list);
             });
 
-            if (control.Control != null)
+            if (control.VisualControl != null)
             {
-                SetControlValue(control.Control.Control, value);
+                SetControlValue(control.VisualControl.Control, value);
 
                 Button minusButton = new() { Text = "-" };
                 HBoxContainer hbox = new();
@@ -314,7 +314,7 @@ public static class VisualControlTypes
                     valueChanged(list);
                 };
 
-                hbox.AddChild(control.Control.Control);
+                hbox.AddChild(control.VisualControl.Control);
                 hbox.AddChild(minusButton);
                 listVBox.AddChild(hbox);
             }
@@ -351,7 +351,7 @@ public static class VisualControlTypes
                 valueChanged(array);
             });
 
-            if (control.Control != null)
+            if (control.VisualControl != null)
             {
                 Button minusButton = new() { Text = "-" };
                 HBoxContainer hbox = new();
@@ -364,7 +364,7 @@ public static class VisualControlTypes
                     valueChanged(array);
                 };
 
-                hbox.AddChild(control.Control.Control);
+                hbox.AddChild(control.VisualControl.Control);
                 hbox.AddChild(minusButton);
                 arrayVBox.AddChild(hbox);
                 arrayVBox.MoveChild(addButton, arrayVBox.GetChildCount() - 1);
@@ -380,9 +380,9 @@ public static class VisualControlTypes
                 valueChanged(array);
             });
 
-            if (control.Control != null)
+            if (control.VisualControl != null)
             {
-                SetControlValue(control.Control.Control, value);
+                SetControlValue(control.VisualControl.Control, value);
 
                 Button minusButton = new() { Text = "-" };
                 HBoxContainer hbox = new();
@@ -395,7 +395,7 @@ public static class VisualControlTypes
                     valueChanged(array);
                 };
 
-                hbox.AddChild(control.Control.Control);
+                hbox.AddChild(control.VisualControl.Control);
                 hbox.AddChild(minusButton);
                 arrayVBox.AddChild(hbox);
             }
