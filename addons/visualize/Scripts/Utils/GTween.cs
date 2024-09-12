@@ -20,7 +20,7 @@ public class GTween
         tween = node.CreateTween();
 
         // This helps to prevent the camera from lagging behind the players movement
-        tween.SetProcessMode(Tween.TweenProcessMode.Physics);
+        tween.SetProcessMode(TweenProcessMode.Physics);
     }
 
     /// <summary>
@@ -91,7 +91,7 @@ public class GTween
     {
         tweener = tween
             .TweenProperty(node, property, finalValue, duration)
-            .SetTrans(Tween.TransitionType.Sine);
+            .SetTrans(TransitionType.Sine);
 
         return this;
     }

@@ -48,9 +48,9 @@ public static partial class VisualControlTypes
             throw new ArgumentOutOfRangeException(nameof(index), index, $"Index was out of range");
         }
 
-        Array dest = System.Array.CreateInstance(source.GetType().GetElementType(), source.Length - 1);
-        System.Array.Copy(source, 0, dest, 0, index);
-        System.Array.Copy(source, index + 1, dest, index, source.Length - index - 1);
+        Array dest = Array.CreateInstance(source.GetType().GetElementType(), source.Length - 1);
+        Array.Copy(source, 0, dest, 0, index);
+        Array.Copy(source, index + 1, dest, index, source.Length - index - 1);
 
         return dest;
     }

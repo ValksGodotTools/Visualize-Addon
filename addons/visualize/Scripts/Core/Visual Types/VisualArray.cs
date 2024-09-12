@@ -14,12 +14,12 @@ public static partial class VisualControlTypes
         Button addButton = new() { Text = "+" };
 
         Type elementType = type.GetElementType();
-        Array array = initialValue as Array ?? System.Array.CreateInstance(elementType, 0);
+        Array array = initialValue as Array ?? Array.CreateInstance(elementType, 0);
 
         void AddNewEntryToArray()
         {
-            Array newArray = System.Array.CreateInstance(elementType, array.Length + 1);
-            System.Array.Copy(array, newArray, array.Length);
+            Array newArray = Array.CreateInstance(elementType, array.Length + 1);
+            Array.Copy(array, newArray, array.Length);
             array = newArray;
             valueChanged(array);
 

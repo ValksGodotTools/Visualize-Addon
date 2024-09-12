@@ -63,7 +63,7 @@ public class VisualLogger
         }
 
         _ = new GTween(label)
-            .SetAnimatingProp(Label.PropertyName.Modulate)
+            .SetAnimatingProp(CanvasItem.PropertyName.Modulate)
             .AnimateProp(Colors.Transparent, fadeTime)
             .Callback(label.QueueFree);
     }
