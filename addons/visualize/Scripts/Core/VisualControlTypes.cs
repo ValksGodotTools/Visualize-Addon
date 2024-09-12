@@ -29,8 +29,8 @@ public static partial class VisualControlTypes
             _ when type.IsArray => VisualArray(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
             _ when type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>) => VisualList(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
             _ when type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>) => VisualDictionary(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
-            _ when type.IsClass && !type.IsSubclassOf(typeof(GodotObject)) => VisualClass(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
-            _ when type.IsValueType && !type.IsClass && !type.IsSubclassOf(typeof(GodotObject)) => VisualClass(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
+            //_ when type.IsClass && !type.IsSubclassOf(typeof(GodotObject)) => VisualClass(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
+            //_ when type.IsValueType && !type.IsClass && !type.IsSubclassOf(typeof(GodotObject)) => VisualClass(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
             _ => new VisualControlInfo(null)
         };
 
