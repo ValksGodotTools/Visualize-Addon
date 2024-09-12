@@ -5,7 +5,7 @@ namespace Visualize.Core;
 
 public static partial class VisualControlTypes
 {
-    private static VisualControlInfo String(object initialValue, Action<string> valueChanged)
+    private static VisualControlInfo VisualString(object initialValue, Action<string> valueChanged)
     {
         LineEdit lineEdit = new() { Text = initialValue.ToString() };
         lineEdit.TextChanged += text => valueChanged(text);

@@ -5,7 +5,7 @@ namespace Visualize.Core;
 
 public static partial class VisualControlTypes
 {
-    private static VisualControlInfo NodePath(object initialValue, Action<NodePath> valueChanged)
+    private static VisualControlInfo VisualNodePath(object initialValue, Action<NodePath> valueChanged)
     {
         NodePath nodePath = (NodePath)initialValue;
         string initialText = nodePath != null ? nodePath.ToString() : string.Empty;

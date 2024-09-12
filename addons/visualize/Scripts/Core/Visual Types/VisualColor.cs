@@ -6,7 +6,7 @@ namespace Visualize.Core;
 
 public static partial class VisualControlTypes
 {
-    private static VisualControlInfo Color(object initialValue, Action<Color> valueChanged)
+    private static VisualControlInfo VisualColor(object initialValue, Action<Color> valueChanged)
     {
         Color initialColor = (Color)initialValue;
 

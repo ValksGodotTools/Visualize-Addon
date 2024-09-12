@@ -6,7 +6,7 @@ namespace Visualize.Core;
 
 public static partial class VisualControlTypes
 {
-    private static VisualControlInfo Enum(object initialValue, Type type, Action<object> valueChanged)
+    private static VisualControlInfo VisualEnum(object initialValue, Type type, Action<object> valueChanged)
     {
         GOptionButtonEnum optionButton = new(type);
         optionButton.Select(initialValue);

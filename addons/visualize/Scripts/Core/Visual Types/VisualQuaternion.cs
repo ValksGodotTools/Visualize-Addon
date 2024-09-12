@@ -5,7 +5,7 @@ namespace Visualize.Core;
 
 public static partial class VisualControlTypes
 {
-    private static VisualControlInfo Quaternion(object initialValue, Action<Quaternion> valueChanged)
+    private static VisualControlInfo VisualQuaternion(object initialValue, Action<Quaternion> valueChanged)
     {
         HBoxContainer quaternionHBox = new();
 

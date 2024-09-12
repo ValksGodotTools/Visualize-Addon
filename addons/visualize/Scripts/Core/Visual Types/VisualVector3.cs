@@ -5,7 +5,7 @@ namespace Visualize.Core;
 
 public static partial class VisualControlTypes
 {
-    private static VisualControlInfo Vector3(object initialValue, Action<Vector3> valueChanged)
+    private static VisualControlInfo VisualVector3(object initialValue, Action<Vector3> valueChanged)
     {
         HBoxContainer vector3HBox = new();
 
