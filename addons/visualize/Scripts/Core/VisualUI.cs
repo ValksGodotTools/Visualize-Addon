@@ -63,9 +63,6 @@ public static class VisualUI
                     // Do nothing
                 });
 
-                // Godot makes it harder to see when their non-editable
-                //visualControlInfo.Control.SetEditable(false);
-
                 updateControls.Add(() =>
                 {
                     object newValue = property != null
