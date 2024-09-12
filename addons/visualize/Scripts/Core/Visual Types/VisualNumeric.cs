@@ -1,6 +1,7 @@
 ﻿using Godot;
 using System;
 using System.Collections.Generic;
+using Visualize.Utils;
 
 namespace Visualize.Core;
 
@@ -41,7 +42,7 @@ public class NumericControl : IVisualControl
             catch (InvalidCastException)
             {
                 // Handle the case where the value cannot be converted to double
-                GD.PushWarning($"Cannot convert value of type {value.GetType()} to double.");
+                PrintUtils.Warning($"Cannot convert value of type {value.GetType()} to double.");
             }
         }
     }

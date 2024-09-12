@@ -36,7 +36,7 @@ public static partial class VisualControlTypes
 
         if (info.VisualControl == null)
         {
-            GD.PushWarning($"The type '{type}' is not supported for the {nameof(VisualizeAttribute)}");
+            PrintUtils.Warning($"The type '{type.Namespace}.{type.Name}' is not supported for the {nameof(VisualizeAttribute)}");
         }
 
         return info;
