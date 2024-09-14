@@ -26,11 +26,22 @@ public static partial class VisualControlTypes
             _ when type == typeof(StringName) => VisualStringName(initialValue, v => valueChanged(v)),
             _ when type.IsNumericType() => VisualNumeric(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
             _ when type.IsEnum => VisualEnum(initialValue, type, v => valueChanged(v)),
+            
+            // Arrays
             _ when type.IsArray => VisualArray(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
             _ when type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>) => VisualList(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
             _ when type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>) => VisualDictionary(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
-            //_ when type.IsClass && !type.IsSubclassOf(typeof(GodotObject)) => VisualClass(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
-            //_ when type.IsValueType && !type.IsClass && !type.IsSubclassOf(typeof(GodotObject)) => VisualClass(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
+            
+            // Godot Resource
+            _ when type.IsClass && type.IsSubclassOf(typeof(Resource)) => VisualClass(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
+            
+            // Class
+            _ when type.IsClass && !type.IsSubclassOf(typeof(GodotObject)) => VisualClass(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
+            
+            // Struct
+            _ when type.IsValueType && !type.IsClass && !type.IsSubclassOf(typeof(GodotObject)) => VisualClass(initialValue, type, debugExportSpinBoxes, v => valueChanged(v)),
+            
+            // Not defined
             _ => new VisualControlInfo(null)
         };
 

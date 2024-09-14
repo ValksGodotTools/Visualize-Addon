@@ -11,77 +11,85 @@ public static partial class VisualControlTypes
 {
     private static VisualControlInfo VisualClass(object target, Type type, List<VisualSpinBox> debugExportSpinBoxes, Action<object> valueChanged)
     {
-        BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
-
-        PropertyInfo[] properties = type.GetProperties(flags);
-        FieldInfo[] allFields = type.GetFields(flags);
-        FieldInfo[] nonBackingFields = allFields.Where(f => !f.Name.StartsWith("<") || !f.Name.EndsWith(">k__BackingField")).ToArray();
-        MethodInfo[] allMethods = type.GetMethods(flags);
-        MethodInfo[] nonPropertyMethods = allMethods.Where(m => !m.Name.StartsWith("get_") && !m.Name.StartsWith("set_")).ToArray();
-
         VBoxContainer vbox = new();
 
-        foreach (PropertyInfo property in properties)
+        if (target != null)
         {
-            object initialValue = property.GetValue(target);
-            VisualControlInfo control = CreateControlForType(initialValue, property.PropertyType, debugExportSpinBoxes, v =>
-            {
-                property.SetValue(target, v);
-                valueChanged(target);
-            });
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly;
 
-            if (control.VisualControl != null)
+            PropertyInfo[] properties = type.GetProperties(flags);
+
+            foreach (PropertyInfo property in properties)
             {
-                HBoxContainer hbox = new();
-                hbox.AddChild(new Label { Text = property.Name.ToPascalCase().AddSpaceBeforeEachCapital() });
-                hbox.AddChild(control.VisualControl.Control);
-                vbox.AddChild(hbox);
+                object initialValue = property.GetValue(target);
+
+                MethodInfo propertySetMethod = property.GetSetMethod(true);
+
+                VisualControlInfo control = CreateControlForType(initialValue, property.PropertyType, debugExportSpinBoxes, v =>
+                {
+                    property.SetValue(target, v);
+                    valueChanged(target);
+                });
+
+                if (control.VisualControl != null)
+                {
+                    if (propertySetMethod == null)
+                    {
+                        control.VisualControl.SetEditable(false);
+                    }
+
+                    vbox.AddChild(CreateHBoxForMember(property.Name, control.VisualControl.Control));
+                }
             }
-        }
 
-        foreach (FieldInfo field in nonBackingFields)
-        {
-            object initialValue = field.GetValue(target);
-            VisualControlInfo control = CreateControlForType(initialValue, field.FieldType, debugExportSpinBoxes, v =>
+            FieldInfo[] fields = type
+            .GetFields(flags)
+            .Where(f => !f.Name.StartsWith("<") || !f.Name.EndsWith(">k__BackingField"))
+            .ToArray();
+
+            foreach (FieldInfo field in fields)
             {
-                field.SetValue(target, v);
-                valueChanged(target);
-            });
+                object initialValue = field.GetValue(target);
 
-            if (control.VisualControl != null)
-            {
-                if (control.VisualControl.Control is SpinBox spinBox)
+                VisualControlInfo control = CreateControlForType(initialValue, field.FieldType, debugExportSpinBoxes, v =>
                 {
-                    spinBox.Editable = !field.IsLiteral;
-                }
-                else if (control.VisualControl.Control is LineEdit lineEdit)
-                {
-                    lineEdit.Editable = !field.IsLiteral;
-                }
-                else if (control.VisualControl.Control is BaseButton baseButton)
-                {
-                    baseButton.Disabled = field.IsLiteral;
-                }
+                    field.SetValue(target, v);
+                    valueChanged(target);
+                });
 
-                HBoxContainer hbox = new();
-                hbox.AddChild(new Label { Text = field.Name.ToPascalCase().AddSpaceBeforeEachCapital() });
-                hbox.AddChild(control.VisualControl.Control);
-                vbox.AddChild(hbox);
+                if (control.VisualControl != null)
+                {
+                    control.VisualControl.SetEditable(!field.IsLiteral);
+                    vbox.AddChild(CreateHBoxForMember(field.Name, control.VisualControl.Control));
+                }
             }
-        }
 
-        foreach (MethodInfo method in nonPropertyMethods)
-        {
-            ParameterInfo[] paramInfos = method.GetParameters();
-            object[] providedValues = new object[paramInfos.Length];
+            // Cannot include private methods or else we will see Godots built in methods
+            MethodInfo[] methods = type
+            .GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly)
+            .Where(m => !m.Name.StartsWith("get_") && !m.Name.StartsWith("set_")).ToArray();
 
-            HBoxContainer hboxParams = VisualMethods.CreateMethodParameterControls(method, debugExportSpinBoxes, providedValues);
-            vbox.AddChild(hboxParams);
+            foreach (MethodInfo method in methods)
+            {
+                ParameterInfo[] paramInfos = method.GetParameters();
+                object[] providedValues = new object[paramInfos.Length];
 
-            Button button = VisualMethods.CreateMethodButton(method, target, paramInfos, providedValues);
-            vbox.AddChild(button);
+                HBoxContainer hboxParams = VisualMethods.CreateMethodParameterControls(method, debugExportSpinBoxes, providedValues);
+                Button button = VisualMethods.CreateMethodButton(method, target, paramInfos, providedValues);
+                
+                vbox.AddChild(hboxParams);
+                vbox.AddChild(button);
+            }
         }
 
         return new VisualControlInfo(new VBoxContainerControl(vbox));
+    }
+
+    private static HBoxContainer CreateHBoxForMember(string memberName, Control control)
+    {
+        HBoxContainer hbox = new();
+        hbox.AddChild(new Label { Text = memberName.ToPascalCase().AddSpaceBeforeEachCapital() });
+        hbox.AddChild(control);
+        return hbox;
     }
 }
