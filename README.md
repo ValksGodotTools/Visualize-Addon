@@ -36,7 +36,7 @@ public partial class Player : Node
 | **Arrays**        | ✅         | `int[]`, `string[]`, `Vector2[]`              | Arrays support all listed types here                                  |
 | **Lists**         | ✅         | `List<string[]>`, `List<Vector2>`             | Lists support all listed types here                                   |
 | **Dictionaries**  | ✅         | `Dictionary<List<Color[]>, Vector2>`          | Dictionaries support all listed types here                            |
-| **Structs**       | ❌         |                                               | Currently disabled as very broken right now                           |
-| **Classes**       | ❌         |                                               | Currently disabled as very broken right now                           |
-| **Records**       | ❌         | `record`                                      | I couldn't get them to work for some reason                           |
-| **Godot Classes** | ❌         | `Node`, `PointLight2D`                        | I'm not even sure how this would work                                 |
+| **Structs**       | ✅         | `struct`                                      |                                                                       |
+| **Classes**       | ✅         | `class`                                       |                                                                       |
+| **Resources**     | ✅         | `Resource`                                    |                                                                       |
+| **Godot Classes** | ❌         | `PointLight2D`, `CharacterBody3D`             |                                                                       |
