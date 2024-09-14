@@ -13,18 +13,23 @@ public static partial class VisualControlTypes
     {
         VBoxContainer vbox = new();
 
+        List<IVisualControl> propertyControls = null;
+        List<IVisualControl> fieldControls = null;
+
         if (context.InitialValue != null)
         {
-            AddProperties(vbox, type, context);
-            AddFields(vbox, type, context);
+            propertyControls = AddProperties(vbox, type, context);
+            fieldControls = AddFields(vbox, type, context);
             AddMethods(vbox, type, context);
         }
 
-        return new VisualControlInfo(new VBoxContainerControl(vbox));
+        return new VisualControlInfo(new ClassControl(vbox, propertyControls, fieldControls));
     }
 
-    private static void AddProperties(VBoxContainer vbox, Type type, VisualControlContext context)
+    private static List<IVisualControl> AddProperties(VBoxContainer vbox, Type type, VisualControlContext context)
     {
+        List<IVisualControl> visualControls = new();
+
         BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly;
 
         PropertyInfo[] properties = type.GetProperties(flags);
@@ -43,15 +48,21 @@ public static partial class VisualControlTypes
 
             if (control.VisualControl != null)
             {
+                visualControls.Add(control.VisualControl);
+
                 control.VisualControl.SetEditable(propertySetMethod != null);
 
                 vbox.AddChild(CreateHBoxForMember(property.Name, control.VisualControl.Control));
             }
         }
+
+        return visualControls;
     }
 
-    private static void AddFields(VBoxContainer vbox, Type type, VisualControlContext context)
+    private static List<IVisualControl> AddFields(VBoxContainer vbox, Type type, VisualControlContext context)
     {
+        List<IVisualControl> visualControls = new();
+
         BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly;
 
         FieldInfo[] fields = type
@@ -71,11 +82,15 @@ public static partial class VisualControlTypes
 
             if (control.VisualControl != null)
             {
+                visualControls.Add(control.VisualControl);
+
                 control.VisualControl.SetEditable(!field.IsLiteral);
 
                 vbox.AddChild(CreateHBoxForMember(field.Name, control.VisualControl.Control));
             }
         }
+
+        return visualControls;
     }
 
     private static void AddMethods(VBoxContainer vbox, Type type, VisualControlContext context)
@@ -106,5 +121,60 @@ public static partial class VisualControlTypes
         hbox.AddChild(new Label { Text = memberName.ToPascalCase().AddSpaceBeforeEachCapital() });
         hbox.AddChild(control);
         return hbox;
+    }
+}
+
+public class ClassControl : IVisualControl
+{
+    private readonly VBoxContainer _vboxContainer;
+    private readonly List<IVisualControl> _visualPropertyControls;
+    private readonly List<IVisualControl> _visualFieldControls;
+
+    public ClassControl(VBoxContainer vboxContainer, List<IVisualControl> visualPropertyControls, List<IVisualControl> visualFieldControls)
+    {
+        _vboxContainer = vboxContainer;
+        _visualPropertyControls = visualPropertyControls;
+        _visualFieldControls = visualFieldControls;
+    }
+
+    public void SetValue(object value)
+    {
+        Type type = value.GetType();
+
+        BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+
+        PropertyInfo[] properties = type.GetProperties(flags);
+
+        for (int i = 0; i < properties.Length; i++)
+        {
+            object propValue = properties[i].GetValue(value);
+            _visualPropertyControls[i].SetValue(propValue);
+        }
+
+        FieldInfo[] fields = type
+            .GetFields(flags)
+            .Where(f => !f.Name.StartsWith("<") || !f.Name.EndsWith(">k__BackingField"))
+            .ToArray();
+
+        for (int i = 0; i < fields.Length; i++)
+        {
+            object fieldValue = fields[i].GetValue(value);
+            _visualFieldControls[i].SetValue(fieldValue);
+        }
+    }
+
+    public Control Control => _vboxContainer;
+
+    public void SetEditable(bool editable)
+    {
+        foreach (IVisualControl visualControl in _visualPropertyControls)
+        {
+            visualControl.SetEditable(editable);
+        }
+
+        foreach (IVisualControl visualControl in _visualFieldControls)
+        {
+            visualControl.SetEditable(editable);
+        }
     }
 }

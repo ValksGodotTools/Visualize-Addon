@@ -65,6 +65,8 @@ public static class VisualUI
 
                 VisualControlInfo visualControlInfo = VisualControlTypes.CreateControlForType(memberType, context);
 
+                visualControlInfo.VisualControl.SetEditable(false);
+
                 updateControls.Add(() =>
                 {
                     object newValue = property != null

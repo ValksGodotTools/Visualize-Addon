@@ -9,7 +9,6 @@ public static partial class VisualControlTypes
 {
     private static VisualControlInfo VisualArray(Type type, VisualControlContext context)
     {
-        List<Control> controls = new();
         VBoxContainer arrayVBox = new() { SizeFlagsHorizontal = SizeFlags.ShrinkEnd | SizeFlags.Expand };
         Button addButton = new() { Text = "+" };
 
