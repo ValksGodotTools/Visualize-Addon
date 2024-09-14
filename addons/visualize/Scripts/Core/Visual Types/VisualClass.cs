@@ -9,21 +9,21 @@ namespace Visualize.Core;
 
 public static partial class VisualControlTypes
 {
-    private static VisualControlInfo VisualClass(object target, Type type, List<VisualSpinBox> debugExportSpinBoxes, Action<object> valueChanged)
+    private static VisualControlInfo VisualClass(Type type, VisualControlContext context)
     {
         VBoxContainer vbox = new();
 
-        if (target != null)
+        if (context.InitialValue != null)
         {
-            AddProperties(vbox, type, target, debugExportSpinBoxes, valueChanged);
-            AddFields(vbox, type, target, debugExportSpinBoxes, valueChanged);
-            AddMethods(vbox, type, target, debugExportSpinBoxes);
+            AddProperties(vbox, type, context);
+            AddFields(vbox, type, context);
+            AddMethods(vbox, type, context);
         }
 
         return new VisualControlInfo(new VBoxContainerControl(vbox));
     }
 
-    private static void AddProperties(VBoxContainer vbox, Type type, object target, List<VisualSpinBox> debugExportSpinBoxes, Action<object> valueChanged)
+    private static void AddProperties(VBoxContainer vbox, Type type, VisualControlContext context)
     {
         BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly;
 
@@ -31,15 +31,15 @@ public static partial class VisualControlTypes
 
         foreach (PropertyInfo property in properties)
         {
-            object initialValue = property.GetValue(target);
+            object initialValue = property.GetValue(context.InitialValue);
 
             MethodInfo propertySetMethod = property.GetSetMethod(true);
 
-            VisualControlInfo control = CreateControlForType(initialValue, property.PropertyType, debugExportSpinBoxes, v =>
+            VisualControlInfo control = CreateControlForType(property.PropertyType, new VisualControlContext(context.SpinBoxes, initialValue, v =>
             {
-                property.SetValue(target, v);
-                valueChanged(target);
-            });
+                property.SetValue(context.InitialValue, v);
+                context.ValueChanged(context.InitialValue);
+            }));
 
             if (control.VisualControl != null)
             {
@@ -50,7 +50,7 @@ public static partial class VisualControlTypes
         }
     }
 
-    private static void AddFields(VBoxContainer vbox, Type type, object target, List<VisualSpinBox> debugExportSpinBoxes, Action<object> valueChanged)
+    private static void AddFields(VBoxContainer vbox, Type type, VisualControlContext context)
     {
         BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly;
 
@@ -61,13 +61,13 @@ public static partial class VisualControlTypes
 
         foreach (FieldInfo field in fields)
         {
-            object initialValue = field.GetValue(target);
+            object initialValue = field.GetValue(context.InitialValue);
 
-            VisualControlInfo control = CreateControlForType(initialValue, field.FieldType, debugExportSpinBoxes, v =>
+            VisualControlInfo control = CreateControlForType(field.FieldType, new VisualControlContext(context.SpinBoxes, initialValue, v =>
             {
-                field.SetValue(target, v);
-                valueChanged(target);
-            });
+                field.SetValue(context.InitialValue, v);
+                context.ValueChanged(context.InitialValue);
+            }));
 
             if (control.VisualControl != null)
             {
@@ -78,7 +78,7 @@ public static partial class VisualControlTypes
         }
     }
 
-    private static void AddMethods(VBoxContainer vbox, Type type, object target, List<VisualSpinBox> debugExportSpinBoxes)
+    private static void AddMethods(VBoxContainer vbox, Type type, VisualControlContext context)
     {
         BindingFlags flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly;
 
@@ -92,8 +92,8 @@ public static partial class VisualControlTypes
             ParameterInfo[] paramInfos = method.GetParameters();
             object[] providedValues = new object[paramInfos.Length];
 
-            HBoxContainer hboxParams = VisualMethods.CreateMethodParameterControls(method, debugExportSpinBoxes, providedValues);
-            Button button = VisualMethods.CreateMethodButton(method, target, paramInfos, providedValues);
+            HBoxContainer hboxParams = VisualMethods.CreateMethodParameterControls(method, context.SpinBoxes, providedValues);
+            Button button = VisualMethods.CreateMethodButton(method, context.InitialValue, paramInfos, providedValues);
 
             vbox.AddChild(hboxParams);
             vbox.AddChild(button);
