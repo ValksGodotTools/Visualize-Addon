@@ -43,9 +43,9 @@ public static partial class VisualControlTypes
             }
 
             FieldInfo[] fields = type
-            .GetFields(flags)
-            .Where(f => !f.Name.StartsWith("<") || !f.Name.EndsWith(">k__BackingField"))
-            .ToArray();
+                .GetFields(flags)
+                .Where(f => !f.Name.StartsWith("<") || !f.Name.EndsWith(">k__BackingField"))
+                .ToArray();
 
             foreach (FieldInfo field in fields)
             {
@@ -66,8 +66,8 @@ public static partial class VisualControlTypes
 
             // Cannot include private methods or else we will see Godots built in methods
             MethodInfo[] methods = type
-            .GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly)
-            .Where(m => !m.Name.StartsWith("get_") && !m.Name.StartsWith("set_")).ToArray();
+                .GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly)
+                .Where(m => !m.Name.StartsWith("get_") && !m.Name.StartsWith("set_")).ToArray();
 
             foreach (MethodInfo method in methods)
             {
