@@ -162,7 +162,7 @@ public static class VisualUI
             VisualHandler.SetMemberValue(member, node, v);
         });
 
-        if (element.VisualControl.Control != null)
+        if (element.VisualControl != null)
         {
             Label label = new()
             {
