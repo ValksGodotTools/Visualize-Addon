@@ -43,10 +43,7 @@ public static partial class VisualControlTypes
 
             if (control.VisualControl != null)
             {
-                if (propertySetMethod == null)
-                {
-                    control.VisualControl.SetEditable(false);
-                }
+                control.VisualControl.SetEditable(propertySetMethod != null);
 
                 vbox.AddChild(CreateHBoxForMember(property.Name, control.VisualControl.Control));
             }
@@ -75,6 +72,7 @@ public static partial class VisualControlTypes
             if (control.VisualControl != null)
             {
                 control.VisualControl.SetEditable(!field.IsLiteral);
+
                 vbox.AddChild(CreateHBoxForMember(field.Name, control.VisualControl.Control));
             }
         }
