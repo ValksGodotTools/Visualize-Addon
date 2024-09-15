@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> ### Since Godot Assets does not support Git submodules and Godot won't stop warning me about this project.godot file in my main project, I'm no longer going to maintain this addon in this repo. Instead I will continue maintaining it in ValksGodotTools/Template.
+
 https://github.com/user-attachments/assets/6bc843de-dc90-44f8-9513-17783f144ae2
 
 #### How it Works
