@@ -3,3 +3,5 @@ I tried out the Godot AssetLib by making this an addon but I no longer want to m
 - Addons do not support GitHub submodules
 - The process of updating the addon on the AssetLib website every new commit / PR is not automated
 - Godot displays an annoying warning message if this Visualize project is included as a submodule in Template
+
+*This repository will stay visible to show how addons can be setup seamlessly. (see [Visualize.cs](https://github.com/ValksGodotTools/Visualize/blob/main/addons/visualize/Scripts/Visualize.cs))*
